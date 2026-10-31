@@ -14,10 +14,10 @@ const diario = ref(null);
 let parar = null;
 
 const entradas = [
-  { de: 0.15, ate: 0.34, texto: 'Turno da manhã. Visibilidade a 40 km, nada a reportar. Daqui vê-se a serra toda: o eucaliptal a norte, o pinhal velho, a aldeia no vale.' },
-  { de: 0.38, ate: 0.55, texto: 'Fim de tarde. Humidade a 18% e o vento a rodar para leste. Há três semanas que não chove.' },
-  { de: 0.66, ate: 0.81, texto: 'Coluna de fumo a noroeste. Encosta Norte, eucaliptal por limpar. Alerta dado à central.' },
-  { de: 0.84, ate: 0.955, texto: 'O fogo desta noite já não se evita. Os próximos dez verões decidem-se aqui dentro, no mapa.' },
+  { de: 0.15, ate: 0.34, texto: 'Turno da manhã no Parque Natural da Serra da Estrela. Visibilidade a 40 km. Daqui vê-se o parque de merendas, o parque de campismo, os trilhos e a estrada que sobe a serra.' },
+  { de: 0.38, ate: 0.55, texto: 'Fim de tarde. Humidade a 18% e vento de leste. Há três semanas que não chove, e o parque de merendas ainda está cheio.' },
+  { de: 0.66, ate: 0.81, texto: 'Coluna de fumo a noroeste, junto ao parque de merendas. Uma fogueira mal apagada. Alerta dado ao 112.' },
+  { de: 0.84, ate: 0.955, texto: 'Quase todos os incêndios começam assim, com um gesto humano. Daqui de cima, vais aprender a reconhecê-los antes que aconteçam.' },
 ];
 
 onMounted(() => {
@@ -52,7 +52,7 @@ onBeforeUnmount(() => parar?.());
 
       <div class="titulo" ref="titulo">
         <h1>Posto de Vigia</h1>
-        <p>Dez anos para gerir a serra. Lucro rápido ou uma floresta que aguenta o fogo?</p>
+        <p>Cinco zonas do parque, cinco formas de começar um incêndio. Aprende a reconhecê-las a tempo.</p>
         <p class="deixa"><ChevronsDown aria-hidden="true" /> Desce para começar o turno</p>
       </div>
 
