@@ -1,15 +1,8 @@
 /* Cena de abertura: um dia inteiro no posto de vigia, guiado pelo scroll.
    Tudo é desenhado em coordenadas de "mundo" (1600 x 1000) e a câmara
    faz o enquadramento e o zoom final para dentro da janela da cabine. */
-(() => {
-  const canvas = document.getElementById('cena');
+export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, entradas, aoEntrar }) {
   const ctx = canvas.getContext('2d');
-  const historia = document.getElementById('historia');
-  const relogio = document.getElementById('relogio');
-  const humidade = document.getElementById('humidade');
-  const titulo = document.getElementById('titulo');
-  const hud = document.querySelector('.hud-intro');
-  const entradas = [...document.querySelectorAll('.diario li')];
   const reduzir = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const MW = 1600, MH = 1000;
@@ -458,7 +451,7 @@
   }
 
   // ---------- ciclo ----------
-  let alvo = 0, atual = 0, ultimo = performance.now(), visivel = true;
+  let alvo = 0, atual = 0, ultimo = performance.now(), visivel = true, pedido = 0, dentro = false;
   function progresso() {
     const r = historia.getBoundingClientRect();
     return clamp(-r.top / (r.height - innerHeight), 0, 1);
@@ -466,15 +459,22 @@
   function quadro(t) {
     const dt = clamp((t - ultimo) / 16.67, 0, 4); ultimo = t;
     alvo = progresso();
-    document.body.classList.toggle('na-cabine', alvo > 0.96);
+    if ((alvo > 0.96) !== dentro) { dentro = alvo > 0.96; aoEntrar?.(dentro); }
     atual = reduzir ? alvo : lerp(atual, alvo, 1 - Math.pow(0.86, dt));
     if (Math.abs(atual - alvo) < 0.0004) atual = alvo;
     if (visivel) { desenhar(atual, t, dt); atualizarTextos(atual); }
-    requestAnimationFrame(quadro);
+    pedido = requestAnimationFrame(quadro);
   }
-  new IntersectionObserver(([e]) => { visivel = e.isIntersecting; }).observe(historia);
+  const observador = new IntersectionObserver(([e]) => { visivel = e.isIntersecting; });
+  observador.observe(historia);
   addEventListener('resize', redimensionar);
   redimensionar();
   atual = alvo = progresso();
-  requestAnimationFrame(quadro);
-})();
+  pedido = requestAnimationFrame(quadro);
+
+  return () => {
+    cancelAnimationFrame(pedido);
+    observador.disconnect();
+    removeEventListener('resize', redimensionar);
+  };
+}

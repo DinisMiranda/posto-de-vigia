@@ -4,123 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Posto de Vigia</title>
-  <meta name="description" content="Jogo de gestão florestal: dez anos para equilibrar lucro, risco de incêndio e resiliência ecológica.">
+  <meta name="description" content="Portal de sensibilização para os incêndios florestais no Parque Natural da Serra da Estrela: cinco zonas do parque, cinco causas humanas.">
   <meta name="theme-color" content="#2E2119">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=Zilla+Slab:ital,wght@0,400;0,500;0,700;1,400;1,500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <a class="saltar" href="#cabine">Saltar para o mapa</a>
-
-  <!-- ============ INTRO: um dia no posto de vigia ============ -->
-  <section id="historia" aria-label="Introdução: um dia no posto de vigia">
-    <div class="palco">
-      <canvas id="cena" aria-hidden="true"></canvas>
-
-      <div class="hud-intro">
-        <p class="marca">Posto de Vigia</p>
-        <dl class="leituras">
-          <div><dt>Hora</dt><dd id="relogio">07:00</dd></div>
-          <div><dt>Humidade</dt><dd id="humidade">54%</dd></div>
-        </dl>
-      </div>
-
-      <div class="titulo" id="titulo">
-        <h1>Posto de Vigia</h1>
-        <p>Dez anos para gerir a serra. Lucro rápido ou uma floresta que aguenta o fogo?</p>
-        <p class="deixa"><i data-lucide="chevrons-down" aria-hidden="true"></i> Desce para começar o turno</p>
-      </div>
-
-      <ol class="diario" aria-label="Diário do vigia">
-        <li data-de="0.15" data-ate="0.34">Turno da manhã. Visibilidade a 40 km, nada a reportar. Daqui vê-se a serra toda: o eucaliptal a norte, o pinhal velho, a aldeia no vale.</li>
-        <li data-de="0.38" data-ate="0.55">Fim de tarde. Humidade a 18% e o vento a rodar para leste. Há três semanas que não chove.</li>
-        <li data-de="0.66" data-ate="0.81">Coluna de fumo a noroeste. Encosta Norte, eucaliptal por limpar. Alerta dado à central.</li>
-        <li data-de="0.84" data-ate="0.955">O fogo desta noite já não se evita. Os próximos dez verões decidem-se aqui dentro, no mapa.</li>
-      </ol>
-    </div>
-  </section>
-
-  <!-- ============ JOGO: dentro da cabine ============ -->
-  <main id="cabine" tabindex="-1">
-    <div class="janelas" aria-hidden="true">
-      <svg id="janela-svg" viewBox="0 0 1200 110" preserveAspectRatio="xMidYMax slice"></svg>
-    </div>
-
-    <header class="instrumentos">
-      <div class="ano">
-        <h2 id="ano-titulo">Ano 1 de 10</h2>
-        <ol id="anos" class="anos" aria-label="Anos jogados"></ol>
-        <p id="previsao" class="previsao"></p>
-      </div>
-
-      <div class="medidor" id="m-risco">
-        <h3>Risco de incêndio</h3>
-        <svg class="mostrador" viewBox="0 0 120 70" aria-hidden="true">
-          <g id="arco-classes"></g>
-          <line id="agulha" x1="60" y1="62" x2="60" y2="16" />
-          <circle cx="60" cy="62" r="4.5" />
-        </svg>
-        <p><output id="v-risco">0%</output> <span id="classe-risco" class="classe"></span></p>
-      </div>
-
-      <div class="medidor" id="m-orcamento">
-        <h3>Orçamento disponível</h3>
-        <p class="grande"><output id="v-orcamento">0 €</output></p>
-        <p id="delta-orcamento" class="delta"></p>
-      </div>
-
-      <div class="medidor" id="m-resiliencia">
-        <h3>Resiliência ecológica</h3>
-        <div class="barra" role="presentation"><span id="b-resiliencia"></span><i class="marca-70" title="Meta do Guardião da Floresta: 70%"></i></div>
-        <p><output id="v-resiliencia">0%</output></p>
-      </div>
-    </header>
-
-    <section class="mesa" aria-label="Carta da serra">
-      <div class="carta-moldura">
-        <div class="carta-topo">
-          <p class="carta-nome">Carta da Serra, folha 17</p>
-          <div class="vistas" role="group" aria-label="Camada do mapa">
-            <button type="button" class="vista ativa" data-vista="vegetacao" aria-pressed="true">Vegetação</button>
-            <button type="button" class="vista" data-vista="risco" aria-pressed="false">Risco</button>
-          </div>
-        </div>
-        <div class="carta-janela">
-          <svg id="mapa" viewBox="0 0 1000 680" role="group" aria-label="Mapa das parcelas. Escolhe uma parcela para agir."></svg>
-        </div>
-        <ul class="legenda" id="legenda"></ul>
-      </div>
-    </section>
-
-    <aside class="caderno" id="caderno" aria-live="polite"></aside>
-
-    <section class="rodape-jogo">
-      <div class="registo">
-        <h3>Registo do posto</h3>
-        <ol id="registo"></ol>
-      </div>
-      <div class="insignias-bloco">
-        <h3>Insígnias</h3>
-        <ul id="insignias" class="insignias"></ul>
-      </div>
-    </section>
-
-    <div class="barra-acao">
-      <p id="resumo-ano" class="resumo-ano"></p>
-      <button type="button" id="avancar" class="botao primario">
-        <i data-lucide="sun" aria-hidden="true"></i><span>Avançar para o verão</span>
-      </button>
-    </div>
-  </main>
-
-  <dialog id="relatorio" aria-labelledby="rel-titulo"></dialog>
-  <div id="aviso" class="aviso" role="status" aria-live="polite"></div>
-
-  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
-  <script src="js/cena.js"></script>
-  <script src="js/jogo.js"></script>
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
 </body>
 </html>

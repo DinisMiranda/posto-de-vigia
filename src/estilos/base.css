@@ -1,0 +1,47 @@
+/* Posto de Vigia
+   Cores tiradas do próprio tema: pinho, papel da carta militar, madeira da cabine,
+   a brasa do fogo e a luz do candeeiro. */
+:root {
+  --pinho: #1F3A2E;
+  --carta: #E3E6D3;
+  --tinta: #23321F;
+  --madeira: #2E2119;
+  --madeira-2: #3A2A1F;
+  --madeira-3: #56402F;
+  --brasa: #D9481C;
+  --brasa-escura: #B93A14;
+  --lampada: #F0B43C;
+  --eucalipto: #6F9A8D;
+  --folhosa: #8CBF68;
+  --texto: #F3EADB;
+  --texto-2: #D2C3AC;
+  --bom-papel: #2D6A27;
+  --mau-papel: #A8331A;
+  --bom-madeira: #A6D685;
+  --mau-madeira: #FF9E7D;
+
+  --serif: 'Zilla Slab', Rockwell, 'Roboto Slab', Georgia, serif;
+  --cond: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif;
+  --gutter: clamp(16px, 3vw, 40px);
+  --raio: 6px;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--madeira);
+  color: var(--texto);
+  font-family: var(--cond);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+h1, h2, h3, h4 { font-family: var(--serif); font-weight: 700; line-height: 1.1; margin: 0; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--lampada); outline-offset: 3px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+[data-lucide], svg.lucide { width: 1.15em; height: 1.15em; flex: none; stroke-width: 2; }
