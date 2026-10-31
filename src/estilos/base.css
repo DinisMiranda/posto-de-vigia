@@ -45,3 +45,45 @@ button { font: inherit; color: inherit; }
 :focus-visible { outline: 3px solid var(--lampada); outline-offset: 3px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 [data-lucide], svg.lucide { width: 1.15em; height: 1.15em; flex: none; stroke-width: 2; }
+
+/* ================= Peças comuns ================= */
+a { color: var(--lampada); }
+.botao {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 46px; padding: 0 20px;
+  border-radius: var(--raio); border: 1.5px solid transparent;
+  font-weight: 600; font-size: 1rem; text-decoration: none; cursor: pointer;
+  transition: background-color .15s, border-color .15s, transform .1s, opacity .15s;
+}
+.botao:active { transform: translateY(1px); }
+.botao:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.botao.primario { background: var(--brasa); color: #FFF6EC; }
+.botao.primario:hover:not(:disabled) { background: var(--brasa-escura); }
+.botao.secundario { background: transparent; color: var(--texto); border-color: var(--madeira-3); }
+.botao.secundario:hover:not(:disabled) { background: var(--madeira-3); }
+.botao.no-papel { color: var(--tinta); border-color: rgba(35, 50, 31, .45); background: transparent; }
+.botao.no-papel:hover:not(:disabled) { background: rgba(35, 50, 31, .08); }
+.botao.pequeno { min-height: 38px; padding: 0 14px; font-size: .95rem; }
+
+/* papel: a carta militar e as fichas do caderno */
+.papel {
+  background: var(--carta);
+  color: var(--tinta);
+  border-radius: 3px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .35), 0 24px 50px -18px rgba(0, 0, 0, .6);
+}
+.papel .muted { color: #4D5A47; }
+
+.etiqueta {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+}
+.cabecalho-vista { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; margin-bottom: 22px; }
+.cabecalho-vista h2 { font-size: clamp(1.9rem, 4vw, 2.6rem); }
+.cabecalho-vista .lead { font-family: var(--serif); font-size: 1.2rem; color: var(--texto-2); margin-top: 6px; max-width: 60ch; }
+.voltar { display: inline-flex; align-items: center; gap: 6px; color: var(--texto-2); text-decoration: none; font-weight: 600; margin-bottom: 14px; }
+.voltar:hover { color: var(--texto); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
