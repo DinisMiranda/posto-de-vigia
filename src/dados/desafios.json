@@ -1,0 +1,378 @@
+{
+  "merendas-cena": {
+    "zona": "merendas",
+    "tipo": "cena",
+    "categoria": "causa",
+    "titulo": "O churrasco de domingo",
+    "instrucao": "Há três situações que podem começar um incêndio. Toca nelas.",
+    "pista": "Procura lume ou brasas em contacto com erva e mato secos.",
+    "cenario": "clareira",
+    "decor": [
+      { "s": "carvalho", "x": 90, "y": 420, "e": 1.1 },
+      { "s": "pinheiro", "x": 1120, "y": 410, "e": 1.2 },
+      { "s": "pinheiro", "x": 1040, "y": 400, "e": 0.9 },
+      { "s": "carvalho", "x": 520, "y": 395, "e": 0.8 },
+      { "s": "arbusto", "x": 250, "y": 560, "e": 1 },
+      { "s": "arbusto", "x": 960, "y": 610, "e": 1.2 },
+      { "s": "erva", "x": 380, "y": 640, "e": 1 },
+      { "s": "erva", "x": 700, "y": 650, "e": 1.2 },
+      { "s": "mesa", "x": 640, "y": 500, "e": 1 },
+      { "s": "pessoa", "x": 600, "y": 505, "e": 0.9, "cor": "#3F7FA6" },
+      { "s": "pessoa", "x": 690, "y": 505, "e": 0.85, "cor": "#C0572B" }
+    ],
+    "alvos": [
+      { "id": "fogueira", "s": "fogueira", "x": 300, "y": 600, "e": 1.1, "risco": true,
+        "nome": "Fogueira no chão, ao lado do mato",
+        "explicacao": "Uma fogueira feita no chão, fora dos grelhadores do parque, pode saltar para o mato com uma rajada de vento. É uma das causas mais comuns nos parques de merendas." },
+      { "id": "cinzas", "s": "cinzas", "x": 900, "y": 615, "e": 1.1, "risco": true,
+        "nome": "Cinzas ainda quentes despejadas no mato",
+        "explicacao": "As cinzas do churrasco ficam quentes durante horas. Despejadas no mato, podem reacender. Devem ser apagadas com água e mexidas até estarem frias." },
+      { "id": "descartavel", "s": "descartavel", "x": 470, "y": 655, "e": 1.1, "risco": true,
+        "nome": "Grelhador descartável pousado na erva seca",
+        "explicacao": "Os grelhadores descartáveis aquecem muito por baixo. Pousados na erva seca, chegam a incendiá-la." },
+      { "id": "grelhador", "s": "grelhador", "x": 790, "y": 490, "e": 1, "risco": false,
+        "nome": "Grelhador de pedra do parque",
+        "explicacao": "É o local próprio para fazer lume: pedra, longe do mato. Mesmo assim, não se usa em dias de perigo muito elevado ou máximo." },
+      { "id": "balde", "s": "balde", "x": 850, "y": 505, "e": 1, "risco": false,
+        "nome": "Balde com água ao lado do grelhador",
+        "explicacao": "Ter água à mão é boa prática: serve para apagar as brasas no fim." },
+      { "id": "contentor", "s": "contentor", "x": 170, "y": 470, "e": 1, "risco": false,
+        "nome": "Contentor do lixo",
+        "explicacao": "Deixar o lixo no contentor é o certo. Lixo espalhado acumula combustível." }
+    ]
+  },
+  "merendas-escolha": {
+    "zona": "merendas",
+    "tipo": "escolha",
+    "categoria": "prevencao",
+    "titulo": "Lume com regras",
+    "instrucao": "Três perguntas sobre o que fazer no parque de merendas.",
+    "perguntas": [
+      {
+        "id": "m1",
+        "enunciado": "É julho e o perigo de incêndio está muito elevado. A família da Rita quer fazer um churrasco. O que deve fazer?",
+        "opcoes": [
+          { "id": "a", "texto": "Usar o grelhador de pedra do parque, com um balde de água ao lado." },
+          { "id": "b", "texto": "Não fazer lume e trazer comida que não precise de ser cozinhada." },
+          { "id": "c", "texto": "Fazer uma fogueira pequena rodeada de pedras." }
+        ],
+        "certa": "b",
+        "explicacao": "Com perigo muito elevado ou máximo, não se faz lume nos espaços florestais, nem nos grelhadores. Uma faúlha basta.",
+        "pista": "Repara no nível de perigo. Há dias em que nenhum lume é seguro."
+      },
+      {
+        "id": "m2",
+        "enunciado": "Acabou o churrasco num dia de perigo moderado. Como se apagam as brasas?",
+        "opcoes": [
+          { "id": "a", "texto": "Deixar arrefecer sozinhas e ir embora." },
+          { "id": "b", "texto": "Tapar com terra e ir embora." },
+          { "id": "c", "texto": "Regar com água, mexer e voltar a regar até estarem frias ao toque." }
+        ],
+        "certa": "c",
+        "explicacao": "Terra por cima esconde brasas que continuam quentes. Água, mexer e voltar a regar é a única forma de garantir que apagaram.",
+        "pista": "Só há uma forma de ter a certeza de que as brasas estão frias."
+      },
+      {
+        "id": "m3",
+        "enunciado": "Vês fumo a sair do mato ao lado de uma mesa vazia. O que fazes primeiro?",
+        "opcoes": [
+          { "id": "a", "texto": "Ligo 112 e digo exatamente onde estou." },
+          { "id": "b", "texto": "Tiro uma fotografia para publicar." },
+          { "id": "c", "texto": "Espero para ver se cresce." }
+        ],
+        "certa": "a",
+        "explicacao": "Os primeiros minutos contam. Liga 112 (ou 117, a linha para incêndios florestais) e indica o local com o máximo de pormenor.",
+        "pista": "Quanto mais cedo os bombeiros souberem, mais pequeno é o incêndio."
+      }
+    ]
+  },
+  "campismo-cena": {
+    "zona": "campismo",
+    "tipo": "cena",
+    "categoria": "causa",
+    "titulo": "Noite no parque de campismo",
+    "instrucao": "Encontra as três situações de risco.",
+    "pista": "Olha também para o céu, não só para o chão.",
+    "cenario": "campismo",
+    "decor": [
+      { "s": "pinheiro", "x": 80, "y": 420, "e": 1.2 },
+      { "s": "pinheiro", "x": 170, "y": 405, "e": 0.9 },
+      { "s": "pinheiro", "x": 1130, "y": 415, "e": 1.1 },
+      { "s": "carvalho", "x": 1010, "y": 400, "e": 0.8 },
+      { "s": "tenda", "x": 420, "y": 520, "e": 1, "cor": "#C0572B" },
+      { "s": "tenda", "x": 1000, "y": 560, "e": 1.1, "cor": "#3F7FA6" },
+      { "s": "erva", "x": 560, "y": 640, "e": 1.2 },
+      { "s": "erva", "x": 250, "y": 650, "e": 1 },
+      { "s": "pessoa", "x": 700, "y": 600, "e": 0.9, "cor": "#7FA650" }
+    ],
+    "alvos": [
+      { "id": "lanterna", "s": "lanterna", "x": 640, "y": 160, "e": 1, "risco": true,
+        "nome": "Lanterna voadora com chama",
+        "explicacao": "As lanternas voadoras levam uma chama acesa e o vento leva-as para onde quer. Podem cair ainda acesas no meio da floresta, longe de quem as lançou." },
+      { "id": "fogareiro-erva", "s": "fogareiro", "x": 530, "y": 600, "e": 1.3, "risco": true,
+        "nome": "Fogareiro pousado na erva, ao lado da tenda",
+        "explicacao": "Um fogareiro na erva seca, encostado à tenda, pode virar com um toque ou com o vento. Cozinha-se só nas bancadas preparadas." },
+      { "id": "fogo-campo", "s": "fogocampo", "x": 230, "y": 590, "e": 1.1, "risco": true,
+        "nome": "Fogo de campo debaixo dos pinheiros",
+        "explicacao": "Fazer fogo de campo debaixo das árvores é arriscado: as faúlhas sobem até à copa e à caruma seca." },
+      { "id": "bancada", "s": "bancada", "x": 820, "y": 520, "e": 1, "risco": false,
+        "nome": "Fogareiro na bancada de pedra",
+        "explicacao": "A bancada de pedra é a zona preparada para cozinhar, longe da erva e das tendas." },
+      { "id": "led", "s": "led", "x": 1060, "y": 545, "e": 1, "risco": false,
+        "nome": "Lanterna LED à porta da tenda",
+        "explicacao": "Luz sem chama: é a escolha certa para iluminar a tenda." },
+      { "id": "extintor", "s": "extintor", "x": 900, "y": 470, "e": 1, "risco": false,
+        "nome": "Extintor do parque",
+        "explicacao": "Os parques de campismo têm extintores à vista. Convém saber onde estão." }
+    ]
+  },
+  "campismo-escolha": {
+    "zona": "campismo",
+    "tipo": "escolha",
+    "categoria": "prevencao",
+    "titulo": "Acampar sem fogo",
+    "instrucao": "Três decisões no parque de campismo.",
+    "perguntas": [
+      {
+        "id": "c1",
+        "enunciado": "Um grupo quer lançar lanternas voadoras para celebrar um aniversário. O que lhes dizes?",
+        "opcoes": [
+          { "id": "a", "texto": "Que esperem que o vento acalme." },
+          { "id": "b", "texto": "Que não as lancem: podem cair acesas na floresta." },
+          { "id": "c", "texto": "Que as lancem perto do lago." }
+        ],
+        "certa": "b",
+        "explicacao": "Ninguém controla onde uma lanterna voadora cai. Mesmo sem vento, pode subir e descer longe, ainda acesa.",
+        "pista": "Depois de lançada, quem é que controla a lanterna?"
+      },
+      {
+        "id": "c2",
+        "enunciado": "O fogareiro está na bancada preparada, mas hoje o perigo de incêndio está elevado e há vento. Cozinhar ali é seguro?",
+        "opcoes": [
+          { "id": "a", "texto": "Sim, desde que seja na bancada é sempre seguro." },
+          { "id": "b", "texto": "Depende: confirmo as regras do parque para hoje e, se for permitido, não deixo o lume sozinho e tenho água ao lado." },
+          { "id": "c", "texto": "Sim, mas ponho o fogareiro no chão para não cair." }
+        ],
+        "certa": "b",
+        "explicacao": "Um local permitido não torna o lume seguro em todos os dias. Com perigo elevado e vento, cada parque pode proibir ou limitar o lume. Na dúvida, não se faz.",
+        "pista": "O local é o certo, mas o dia conta tanto como o local."
+      },
+      {
+        "id": "c3",
+        "enunciado": "Qual é a melhor forma de iluminar o acampamento à noite?",
+        "opcoes": [
+          { "id": "a", "texto": "Velas dentro de frascos de vidro." },
+          { "id": "b", "texto": "Uma pequena fogueira." },
+          { "id": "c", "texto": "Lanternas a pilhas ou recarregáveis." }
+        ],
+        "certa": "c",
+        "explicacao": "Luz sem chama elimina o risco. As velas e as fogueiras continuam a ser lume, mesmo pequenas.",
+        "pista": "Há uma opção que não tem chama nenhuma."
+      }
+    ]
+  },
+  "trilho-cena": {
+    "zona": "trilho",
+    "tipo": "cena",
+    "categoria": "causa",
+    "titulo": "A meio do trilho",
+    "instrucao": "Encontra as três situações de risco ao longo do trilho.",
+    "pista": "Procura coisas pequenas no chão e quem as deixa cair.",
+    "cenario": "trilho",
+    "decor": [
+      { "s": "pinheiro", "x": 70, "y": 430, "e": 1.3 },
+      { "s": "carvalho", "x": 1130, "y": 420, "e": 1.2 },
+      { "s": "pinheiro", "x": 980, "y": 400, "e": 0.9 },
+      { "s": "carvalho", "x": 380, "y": 395, "e": 0.9 },
+      { "s": "arbusto", "x": 150, "y": 600, "e": 1.1 },
+      { "s": "arbusto", "x": 1050, "y": 620, "e": 1.1 },
+      { "s": "erva", "x": 860, "y": 560, "e": 1.1 },
+      { "s": "erva", "x": 330, "y": 660, "e": 1 },
+      { "s": "banco", "x": 760, "y": 480, "e": 1 }
+    ],
+    "alvos": [
+      { "id": "fumador", "s": "fumador", "x": 520, "y": 520, "e": 1, "risco": true,
+        "nome": "Caminhante a fumar no trilho",
+        "explicacao": "Fumar dentro da floresta é proibido no período crítico, e por boas razões: a cinza e a beata caem no mato seco." },
+      { "id": "beata", "s": "beata", "x": 860, "y": 600, "e": 1.4, "risco": true,
+        "nome": "Beata ainda acesa na erva seca",
+        "explicacao": "Uma beata atirada ainda acesa para a erva seca pode arder em lume brando durante minutos e pegar fogo ao mato." },
+      { "id": "vidro", "s": "garrafa", "x": 240, "y": 640, "e": 1.2, "risco": true,
+        "nome": "Garrafa de vidro e lixo deixados no mato",
+        "explicacao": "O lixo acumula combustível e, em casos raros, o vidro concentra o sol como uma lupa. Leva sempre o lixo contigo." },
+      { "id": "placa", "s": "placa", "x": 650, "y": 470, "e": 1, "risco": false,
+        "nome": "Placa do trilho",
+        "explicacao": "Seguir as placas mantém-te no trilho marcado, onde as equipas de vigilância passam." },
+      { "id": "garrafa-agua", "s": "caminhante", "x": 380, "y": 540, "e": 0.95, "risco": false,
+        "nome": "Caminhante com garrafa reutilizável",
+        "explicacao": "Água para beber e nada deixado para trás: assim se percorre um trilho." },
+      { "id": "contentor-trilho", "s": "contentor", "x": 1000, "y": 520, "e": 0.9, "risco": false,
+        "nome": "Contentor no início do trilho",
+        "explicacao": "O lixo vai para o contentor ou volta contigo para casa." }
+    ]
+  },
+  "trilho-escolha": {
+    "zona": "trilho",
+    "tipo": "escolha",
+    "categoria": "prevencao",
+    "titulo": "Caminhar com cuidado",
+    "instrucao": "Três perguntas para quem anda nos trilhos do parque.",
+    "perguntas": [
+      {
+        "id": "t1",
+        "enunciado": "Estás no trilho e queres fumar. O que fazes?",
+        "opcoes": [
+          { "id": "a", "texto": "Fumo e apago a beata na sola do sapato." },
+          { "id": "b", "texto": "Espero até sair da floresta." },
+          { "id": "c", "texto": "Fumo em cima de uma pedra." }
+        ],
+        "certa": "b",
+        "explicacao": "Apagar a beata não chega: a cinza e as faúlhas caem enquanto se fuma. No período crítico, fumar dentro dos espaços florestais é proibido.",
+        "pista": "O risco não está só na beata, mas em todo o tempo em que o cigarro está aceso."
+      },
+      {
+        "id": "t2",
+        "enunciado": "Ao longe, vês uma coluna de fumo branco por cima das árvores. O que fazes?",
+        "opcoes": [
+          { "id": "a", "texto": "Ligo 112, digo o nome do trilho, a direção do fumo e afasto-me pelo caminho por onde vim." },
+          { "id": "b", "texto": "Vou até lá para ver se é mesmo um incêndio." },
+          { "id": "c", "texto": "Continuo o trilho e aviso quando chegar ao fim." }
+        ],
+        "certa": "a",
+        "explicacao": "Nunca vás na direção do fumo. Liga 112 de imediato, dá pontos de referência e sai pelo caminho que conheces.",
+        "pista": "O mais importante é avisar depressa e não te pores em perigo."
+      },
+      {
+        "id": "t3",
+        "enunciado": "Fizeste um piquenique a meio do trilho e não há contentor perto. O que fazes ao lixo?",
+        "opcoes": [
+          { "id": "a", "texto": "Escondo-o debaixo de uma pedra." },
+          { "id": "b", "texto": "Deixo-o junto ao banco para alguém recolher." },
+          { "id": "c", "texto": "Levo-o comigo até encontrar um contentor." }
+        ],
+        "certa": "c",
+        "explicacao": "Tudo o que entra no trilho sai do trilho. Lixo deixado para trás é combustível e polui o parque.",
+        "pista": "Quem é responsável pelo lixo que levaste?"
+      }
+    ]
+  },
+  "estrada-cena": {
+    "zona": "estrada",
+    "tipo": "cena",
+    "categoria": "causa",
+    "titulo": "A estrada que sobe a serra",
+    "instrucao": "Encontra as três situações de risco na estrada e nas bermas.",
+    "pista": "Os carros também aquecem por baixo e podem fazer faíscas.",
+    "cenario": "estrada",
+    "decor": [
+      { "s": "pinheiro", "x": 90, "y": 400, "e": 1.1 },
+      { "s": "eucalipto", "x": 1120, "y": 405, "e": 1.1 },
+      { "s": "pinheiro", "x": 980, "y": 395, "e": 0.8 },
+      { "s": "arbusto", "x": 260, "y": 440, "e": 0.9 },
+      { "s": "erva", "x": 120, "y": 680, "e": 1.2 },
+      { "s": "erva", "x": 1080, "y": 680, "e": 1.1 }
+    ],
+    "alvos": [
+      { "id": "carro-erva", "s": "carroerva", "x": 300, "y": 660, "e": 1, "risco": true,
+        "nome": "Carro estacionado sobre erva seca",
+        "explicacao": "O escape e o catalisador de um carro chegam a temperaturas muito altas. Parado sobre erva seca, pode incendiá-la." },
+      { "id": "janela", "s": "carrojanela", "x": 760, "y": 540, "e": 1, "risco": true,
+        "nome": "Beata atirada pela janela",
+        "explicacao": "Uma beata atirada de um carro em andamento cai na berma, muitas vezes cheia de erva seca." },
+      { "id": "corrente", "s": "atrelado", "x": 380, "y": 545, "e": 1, "risco": true,
+        "nome": "Corrente do atrelado a arrastar no alcatrão",
+        "explicacao": "Uma corrente solta a arrastar no alcatrão faz faíscas que podem cair na berma seca." },
+      { "id": "estacionamento", "s": "estacionamento", "x": 1000, "y": 470, "e": 1, "risco": false,
+        "nome": "Carro no parque de estacionamento",
+        "explicacao": "Estacionar em locais próprios, sem vegetação por baixo, é o correto." },
+      { "id": "faixa", "s": "faixa", "x": 880, "y": 690, "e": 1, "risco": false,
+        "nome": "Berma limpa",
+        "explicacao": "As bermas limpas de mato são faixas de gestão de combustível: travam o fogo junto à estrada." }
+    ]
+  },
+  "estrada-escolha": {
+    "zona": "estrada",
+    "tipo": "escolha",
+    "categoria": "prevencao",
+    "titulo": "Na estrada do parque",
+    "instrucao": "Três decisões de quem conduz no parque.",
+    "perguntas": [
+      {
+        "id": "e1",
+        "enunciado": "O parque de estacionamento do miradouro está cheio. Onde estacionas?",
+        "opcoes": [
+          { "id": "a", "texto": "Na berma, em cima da erva, só por meia hora." },
+          { "id": "b", "texto": "Volto mais tarde ou procuro outro estacionamento sem vegetação por baixo." },
+          { "id": "c", "texto": "Na berma, mas com o motor a trabalhar." }
+        ],
+        "certa": "b",
+        "explicacao": "Meia hora chega para o calor do escape incendiar a erva. Só se estaciona onde não haja vegetação seca por baixo.",
+        "pista": "O problema não é o tempo: é o que está por baixo do carro."
+      },
+      {
+        "id": "e2",
+        "enunciado": "Vais rebocar um atrelado pela estrada do parque. O que verificas antes de sair?",
+        "opcoes": [
+          { "id": "a", "texto": "Que as correntes de segurança estão presas e não tocam no chão." },
+          { "id": "b", "texto": "Só a pressão dos pneus." },
+          { "id": "c", "texto": "Nada, é uma viagem curta." }
+        ],
+        "certa": "a",
+        "explicacao": "Correntes soltas fazem faíscas no alcatrão ao longo de quilómetros de berma.",
+        "pista": "Que peça do atrelado pode tocar no chão?"
+      },
+      {
+        "id": "e3",
+        "enunciado": "Porque é que as bermas das estradas do parque são limpas de mato?",
+        "opcoes": [
+          { "id": "a", "texto": "Só por razões estéticas." },
+          { "id": "b", "texto": "Para os condutores verem melhor os animais." },
+          { "id": "c", "texto": "Para travar o fogo: sem combustível, um foco na berma não se espalha." }
+        ],
+        "certa": "c",
+        "explicacao": "São faixas de gestão de combustível. Muitos incêndios começam na berma, e uma berma limpa dá tempo para chegar antes de o fogo crescer.",
+        "pista": "Pensa no que acontece a uma faúlha que cai numa berma sem mato."
+      }
+    ]
+  },
+  "floresta-escolha": {
+    "zona": "floresta",
+    "tipo": "escolha",
+    "categoria": "prevencao",
+    "titulo": "Máquinas na floresta",
+    "instrucao": "Duas decisões antes de pôr as máquinas a trabalhar.",
+    "perguntas": [
+      {
+        "id": "f1",
+        "enunciado": "Uma equipa vai limpar mato com motorroçadoras. Qual é a melhor altura?",
+        "opcoes": [
+          { "id": "a", "texto": "Uma tarde de agosto, quando há menos gente no parque." },
+          { "id": "b", "texto": "No outono ou na primavera, antes de o mato secar." },
+          { "id": "c", "texto": "Tanto faz, desde que haja um extintor." }
+        ],
+        "certa": "b",
+        "explicacao": "Fora do verão, a vegetação está húmida e as faíscas das lâminas nas pedras não pegam fogo. É também quando a limpeza mais protege.",
+        "pista": "Quando é que o mato está menos seco?"
+      },
+      {
+        "id": "f2",
+        "enunciado": "Está um dia de perigo máximo e falta só uma parcela para cortar. O que faz a equipa?",
+        "opcoes": [
+          { "id": "a", "texto": "Para os trabalhos com máquinas e volta noutro dia." },
+          { "id": "b", "texto": "Trabalha só de manhã cedo." },
+          { "id": "c", "texto": "Trabalha com um balde de água ao lado." }
+        ],
+        "certa": "a",
+        "explicacao": "Em dias de perigo muito elevado ou máximo, os trabalhos com máquinas nos espaços florestais não se devem fazer. Uma faísca basta.",
+        "pista": "Repara no nível de perigo do dia."
+      }
+    ]
+  },
+  "floresta-encosta": {
+    "zona": "floresta",
+    "tipo": "encosta",
+    "categoria": "prevencao",
+    "titulo": "A encosta",
+    "instrucao": "Tens 2 500 € e quatro estações até ao verão. Limpa, planta ou vende. No fim, o verão testa as tuas escolhas."
+  }
+}

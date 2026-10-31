@@ -1,0 +1,124 @@
+{
+  "inicial": {
+    "titulo": "Antes de começar",
+    "instrucao": "Cinco perguntas rápidas sobre as causas dos incêndios. Não há pontos nem respostas erradas que te prejudiquem: serve só para medir o que aprendes no fim.",
+    "perguntas": [
+      {
+        "id": "q1",
+        "enunciado": "Em Portugal, qual é a origem da maioria dos incêndios florestais?",
+        "opcoes": [
+          { "id": "a", "texto": "Raios e trovoadas." },
+          { "id": "b", "texto": "Ação humana, por descuido ou de propósito." },
+          { "id": "c", "texto": "O calor, que faz o mato arder sozinho." }
+        ],
+        "certa": "b"
+      },
+      {
+        "id": "q2",
+        "enunciado": "Num dia quente de verão, qual destes carros pode começar um incêndio?",
+        "opcoes": [
+          { "id": "a", "texto": "Um carro estacionado sobre erva seca." },
+          { "id": "b", "texto": "Um carro num parque de estacionamento alcatroado." },
+          { "id": "c", "texto": "Um carro a circular na estrada, com as janelas fechadas." }
+        ],
+        "certa": "a"
+      },
+      {
+        "id": "q3",
+        "enunciado": "Uma beata atirada para a berma pode começar um incêndio?",
+        "opcoes": [
+          { "id": "a", "texto": "Não, apaga-se sozinha em segundos." },
+          { "id": "b", "texto": "Só se cair em cima de gasolina." },
+          { "id": "c", "texto": "Sim, sobretudo com erva seca e vento." }
+        ],
+        "certa": "c"
+      },
+      {
+        "id": "q4",
+        "enunciado": "Porque é que as lanternas voadoras são perigosas?",
+        "opcoes": [
+          { "id": "a", "texto": "Porque podem cair ainda acesas, longe de quem as lançou." },
+          { "id": "b", "texto": "Não são: o papel arde todo no ar." },
+          { "id": "c", "texto": "Só são perigosas dentro das cidades." }
+        ],
+        "certa": "a"
+      },
+      {
+        "id": "q5",
+        "enunciado": "Como pode uma motorroçadora começar um incêndio?",
+        "opcoes": [
+          { "id": "a", "texto": "Não pode, porque é elétrica ou a gasolina." },
+          { "id": "b", "texto": "As lâminas fazem faíscas quando batem em pedras." },
+          { "id": "c", "texto": "Só se o motor explodir." }
+        ],
+        "certa": "b"
+      }
+    ]
+  },
+  "final": {
+    "titulo": "Qual foi a causa?",
+    "instrucao": "Cinco incêndios no parque, baseados em casos reais simplificados. Lê as pistas e descobre como começou cada um.",
+    "perguntas": [
+      {
+        "id": "f1",
+        "enunciado": "Agosto, 16h. O fogo começou junto a uma mesa do parque de merendas. Encontraram-se pedras em círculo e restos de carvão.",
+        "opcoes": [
+          { "id": "a", "texto": "Uma trovoada seca." },
+          { "id": "b", "texto": "Uma fogueira feita fora dos grelhadores." },
+          { "id": "c", "texto": "Uma máquina de limpeza." }
+        ],
+        "certa": "b",
+        "explicacao": "Pedras em círculo e carvão são marcas de uma fogueira improvisada, fora do local próprio.",
+        "zona": "merendas"
+      },
+      {
+        "id": "f2",
+        "enunciado": "Julho, 14h. O foco estava na berma da estrada do parque, onde havia marcas de pneus na erva seca. Ali não há estacionamento.",
+        "opcoes": [
+          { "id": "a", "texto": "Um carro estacionado sobre a erva." },
+          { "id": "b", "texto": "Uma lanterna voadora." },
+          { "id": "c", "texto": "Lixo deixado por caminhantes." }
+        ],
+        "certa": "a",
+        "explicacao": "Marcas de pneus na erva, num sítio sem estacionamento: um carro parado com o escape quente sobre a vegetação seca.",
+        "zona": "estrada"
+      },
+      {
+        "id": "f3",
+        "enunciado": "Setembro, 23h. Três pequenos focos espalhados a centenas de metros do parque de campismo, onde houve uma festa. Não há estradas perto.",
+        "opcoes": [
+          { "id": "a", "texto": "Faíscas de uma motorroçadora." },
+          { "id": "b", "texto": "Um carro mal estacionado." },
+          { "id": "c", "texto": "Lanternas voadoras que caíram acesas." }
+        ],
+        "certa": "c",
+        "explicacao": "Vários focos afastados uns dos outros, de noite e depois de uma festa: as lanternas voadoras caem onde o vento as leva.",
+        "zona": "campismo"
+      },
+      {
+        "id": "f4",
+        "enunciado": "Agosto, 15h, perigo máximo. O fogo começou numa encosta onde uma equipa limpava mato. O terreno tem muitas pedras soltas.",
+        "opcoes": [
+          { "id": "a", "texto": "Faíscas das lâminas nas pedras." },
+          { "id": "b", "texto": "Uma beata atirada de um carro." },
+          { "id": "c", "texto": "Um raio." }
+        ],
+        "certa": "a",
+        "explicacao": "Máquinas a trabalhar num dia de perigo máximo, em terreno pedregoso: as lâminas fazem faíscas que pegam no mato seco.",
+        "zona": "floresta"
+      },
+      {
+        "id": "f5",
+        "enunciado": "Julho, 18h, céu limpo. O foco estava junto a um banco do trilho pedestre, num ponto onde os caminhantes param para descansar.",
+        "opcoes": [
+          { "id": "a", "texto": "Uma trovoada." },
+          { "id": "b", "texto": "Uma beata deixada por quem parou ali." },
+          { "id": "c", "texto": "Um carro estacionado." }
+        ],
+        "certa": "b",
+        "explicacao": "Céu limpo exclui a trovoada e não há carros no trilho. Um ponto de paragem é onde mais se fuma e se deixam beatas.",
+        "zona": "trilho"
+      }
+    ]
+  }
+}
