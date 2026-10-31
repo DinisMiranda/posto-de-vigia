@@ -151,8 +151,11 @@ export const useVigiaStore = defineStore('vigia', () => {
     atualizarZonas();
   }
 
+  /** Desafio final: +10 por caso certo, contando só a melhor tentativa. */
   function registarDesafioFinal(acertos) {
-    desafioFinal.value = Math.max(desafioFinal.value ?? 0, acertos);
+    const antes = desafioFinal.value ?? 0;
+    desafioFinal.value = Math.max(antes, acertos);
+    adicionarPontos((desafioFinal.value - antes) * 10);
   }
 
   // ----- desafio da encosta -----

@@ -6,11 +6,11 @@ import EmBreve from './views/VistaEmBreve.vue';
 
 const routes = [
   { path: '/', name: 'mapa', component: VistaMapa },
-  { path: '/quiz-inicial', name: 'quiz-inicial', component: EmBreve, props: { tipo: 'inicial' } },
+  { path: '/quiz-inicial', name: 'quiz-inicial', component: () => import('./views/VistaQuiz.vue'), props: { tipo: 'inicial' } },
   { path: '/zona/:id', name: 'zona', component: EmBreve, props: true },
   { path: '/zona/:id/:desafio', name: 'desafio', component: EmBreve, props: true },
   { path: '/observatorio/:id?', name: 'observatorio', component: EmBreve, props: true },
-  { path: '/desafio-final', name: 'desafio-final', component: EmBreve, props: { tipo: 'final' } },
+  { path: '/desafio-final', name: 'desafio-final', component: () => import('./views/VistaQuiz.vue'), props: { tipo: 'final' } },
   { path: '/cartao', name: 'cartao', component: EmBreve },
   { path: '/:caminho(.*)*', redirect: '/' },
 ];
