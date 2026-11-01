@@ -1,7 +1,7 @@
 <script setup>
 import { computed, defineAsyncComponent, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { ArrowLeft, ArrowRight, RotateCcw, Zap, Map, Sparkles } from 'lucide-vue-next';
+import { ArrowLeft, ArrowRight, RotateCcw, Zap, Map, Sparkles, Flag } from 'lucide-vue-next';
 import { useVigiaStore } from '../stores/vigia.js';
 import { zonaPorId, DESAFIOS, pontuar, pontosMaximos, PONTOS } from '../logica/regras.js';
 import DesafioCena from '../components/DesafioCena.vue';
@@ -68,11 +68,12 @@ const max = computed(() => pontosMaximos(props.desafio) + (d.value.tipo !== 'enc
         <template v-if="resultado.ganhos > 0"><Sparkles aria-hidden="true" /> Ganhaste {{ resultado.ganhos }} pontos de Vigilância.</template>
         <template v-else-if="resultado.anterior">A tua melhor tentativa continua a ser {{ resultado.anterior }} pontos. Conta só a melhor.</template>
       </p>
-      <p v-if="resultado.zonaFechada" class="zona-fechada">Concluíste {{ zona.nome.toLowerCase() }}. Os dados desta zona já estão no Observatório.</p>
+      <p v-if="resultado.zonaFechada" class="zona-fechada">Concluíste {{ zona.comArtigo }}. Os dados desta zona já estão no Observatório.</p>
 
       <div class="acoes">
         <RouterLink v-if="proximo" class="botao primario" :to="{ name: 'desafio', params: { id, desafio: proximo } }">Próximo desafio <ArrowRight aria-hidden="true" /></RouterLink>
-        <RouterLink v-else-if="proximaZona" class="botao primario" :to="{ name: 'zona', params: { id: proximaZona.id } }">Ir para {{ proximaZona.nome.toLowerCase() }} <ArrowRight aria-hidden="true" /></RouterLink>
+        <RouterLink v-else-if="proximaZona" class="botao primario" :to="{ name: 'zona', params: { id: proximaZona.id } }">Ir para {{ proximaZona.comArtigo }} <ArrowRight aria-hidden="true" /></RouterLink>
+        <RouterLink v-else-if="s.eGuardiao && s.desafioFinal === null" class="botao primario" :to="{ name: 'desafio-final' }"><Flag aria-hidden="true" /> Ir para o desafio final</RouterLink>
         <RouterLink v-else class="botao primario" :to="{ name: 'mapa' }"><Map aria-hidden="true" /> Voltar ao mapa</RouterLink>
         <button type="button" class="botao no-papel" @click="repetir"><RotateCcw aria-hidden="true" /> Repetir</button>
         <RouterLink v-if="!dificil && s.resultados[desafio]?.semPistas && d.tipo !== 'encosta'" class="botao no-papel" :to="{ name: 'desafio', params: { id, desafio }, query: { modo: 'dificil' } }">

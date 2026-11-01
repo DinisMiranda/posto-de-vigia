@@ -64,7 +64,7 @@ export const useVigiaStore = defineStore('vigia', () => {
   /** Perigo da época: o pior risco entre as zonas ainda por concluir. */
   const perigoDoDia = computed(() => {
     const abertas = zonas.value.filter(z => z.estado !== 'concluida').map(z => riscoPorZona.value[z.id]);
-    const r = abertas.length ? Math.max(...abertas) : 30;
+    const r = abertas.length ? Math.max(...abertas) : Math.round(Object.values(riscoPorZona.value).reduce((a, b) => a + b, 0) / ZONAS.length);
     return { valor: r, ...classeDe(r) };
   });
   const encostaMetricas = computed(() => encostaLogica.metricas(encosta.value.parcelas));

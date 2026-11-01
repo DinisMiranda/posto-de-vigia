@@ -2,51 +2,86 @@
   {
     "id": "merendas",
     "nome": "Parque de merendas",
+    "comArtigo": "o parque de merendas",
     "causa": "Fogueiras e churrascos fora dos locais próprios",
     "resumo": "Um domingo de calor, mesas cheias e cheiro a churrasco. Onde é que o lume pode fugir?",
     "alerta": "Domingo de calor: o parque de merendas está cheio.",
     "dica": "Faz lume só nos grelhadores do parque e nunca em dias de perigo muito elevado ou máximo. Apaga com água até as cinzas estarem frias.",
-    "desafios": ["merendas-cena", "merendas-escolha"],
-    "mapa": { "x": 300, "y": 300 }
+    "desafios": [
+      "merendas-cena",
+      "merendas-escolha"
+    ],
+    "mapa": {
+      "x": 300,
+      "y": 300
+    }
   },
   {
     "id": "campismo",
     "nome": "Parque de campismo",
+    "comArtigo": "o parque de campismo",
     "causa": "Fogareiros, fogo de campo e lanternas voadoras",
     "resumo": "Noite de verão no parque de campismo. Há quem cozinhe, quem faça fogo e quem queira lançar lanternas.",
     "alerta": "Dia de calor e vento no parque de campismo.",
     "dica": "Usa o fogareiro só nas zonas preparadas, longe de erva e tendas. Não faças fogo de campo nem lances lanternas voadoras.",
-    "desafios": ["campismo-cena", "campismo-escolha"],
-    "mapa": { "x": 600, "y": 410 }
+    "desafios": [
+      "campismo-cena",
+      "campismo-escolha"
+    ],
+    "mapa": {
+      "x": 600,
+      "y": 410
+    }
   },
   {
     "id": "trilho",
     "nome": "Trilho pedestre",
+    "comArtigo": "o trilho pedestre",
     "causa": "Beatas e lixo deixados no mato",
     "resumo": "Um trilho de 8 km entre pinhal e carvalhal. Quem passa nem sempre leva o que trouxe.",
     "alerta": "Muitos caminhantes no trilho e a vegetação está muito seca.",
     "dica": "Não fumes dentro da floresta e leva o lixo contigo. Se vires fumo, liga 112 e diz onde estás.",
-    "desafios": ["trilho-cena", "trilho-escolha"],
-    "mapa": { "x": 180, "y": 520 }
+    "desafios": [
+      "trilho-cena",
+      "trilho-escolha"
+    ],
+    "mapa": {
+      "x": 180,
+      "y": 520
+    }
   },
   {
     "id": "estrada",
     "nome": "Estrada do parque",
+    "comArtigo": "a estrada do parque",
     "causa": "Carros sobre erva seca, faíscas e beatas pela janela",
     "resumo": "A estrada que sobe a serra. Carros parados na berma, atrelados e janelas abertas.",
     "alerta": "Tarde de agosto: trânsito intenso na estrada do parque.",
     "dica": "Estaciona só em locais próprios, nunca sobre erva seca. Não atires nada pela janela e verifica correntes e atrelados.",
-    "desafios": ["estrada-cena", "estrada-escolha"],
-    "mapa": { "x": 760, "y": 590 }
+    "desafios": [
+      "estrada-cena",
+      "estrada-escolha"
+    ],
+    "mapa": {
+      "x": 760,
+      "y": 590
+    }
   },
   {
     "id": "floresta",
     "nome": "Floresta de produção",
+    "comArtigo": "a floresta de produção",
     "causa": "Maquinaria em dias de calor e combustível acumulado",
     "resumo": "Uma encosta para gerir durante quatro estações. Lucro rápido ou uma floresta que aguenta o verão?",
     "alerta": "Previsão de onda de calor: atenção aos trabalhos na floresta.",
     "dica": "Nos dias de perigo muito elevado ou máximo não trabalhes com máquinas na floresta. Limpa o mato fora do verão e prefere espécies autóctones.",
-    "desafios": ["floresta-escolha", "floresta-encosta"],
-    "mapa": { "x": 760, "y": 200 }
+    "desafios": [
+      "floresta-escolha",
+      "floresta-encosta"
+    ],
+    "mapa": {
+      "x": 760,
+      "y": 200
+    }
   }
 ]

@@ -67,7 +67,7 @@ function entrar() {
         <p class="etiqueta"><Siren aria-hidden="true" /> Alerta do posto</p>
         <p class="alerta-texto">{{ s.sugestao.alerta }}</p>
         <button v-if="s.sugestao.id !== selecionada" type="button" class="ligacao" @click="escolhida = s.sugestao.id">
-          Ver {{ s.sugestao.nome.toLowerCase() }} <ArrowRight aria-hidden="true" />
+          Ver {{ s.sugestao.comArtigo }} <ArrowRight aria-hidden="true" />
         </button>
       </div>
       <div v-else-if="s.eGuardiao" class="alerta concluido">

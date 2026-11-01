@@ -62,7 +62,7 @@ const indice = computed(() => NIVEIS.findIndex(n => n.id === s.nivel));
         <circle cx="60" cy="62" r="4.5" />
       </svg>
       <p class="classe" :style="{ '--c': s.perigoDoDia.cor }">{{ s.perigoDoDia.nome }}</p>
-      <p class="falta">Estimativa para as zonas por concluir</p>
+      <p class="falta">{{ s.zonasConcluidas < 5 ? 'Estimativa para as zonas por concluir' : 'Todas as zonas concluídas' }}</p>
     </section>
 
     <section class="medidor insignias">
