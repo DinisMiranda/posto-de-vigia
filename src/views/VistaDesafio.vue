@@ -55,7 +55,9 @@ const max = computed(() => pontosMaximos(props.desafio) + (d.value.tipo !== 'enc
       <DesafioEncosta v-else :key="'n' + tentativa" @terminar="terminar" />
     </template>
 
-    <section v-else class="papel resultado" aria-live="polite">
+    <section v-else class="caderno-campo resultado" aria-live="polite">
+      <span class="fita esq" aria-hidden="true"></span>
+      <div class="carimbo" aria-hidden="true"><span>Posto de Vigia</span><strong>+{{ resultado.ganhos }}</strong><span>pontos</span></div>
       <p class="etiqueta-r">Resultado</p>
       <p class="total"><strong>{{ resultado.pontos }}</strong> / {{ max }} pontos</p>
       <ul class="contas">
@@ -86,7 +88,8 @@ const max = computed(() => pontosMaximos(props.desafio) + (d.value.tipo !== 'enc
 
 <style scoped>
 .etiqueta { color: var(--lampada); }
-.resultado { padding: 26px 26px 28px; max-width: 640px; }
+.resultado { max-width: 640px; animation: pousar .45s var(--ease-saida); }
+@keyframes pousar { from { opacity: 0; transform: translateY(14px) rotate(-1deg); } }
 .etiqueta-r { font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #4D5A47; }
 .total { font-family: var(--serif); font-size: 1.4rem; margin-top: 4px; }
 .total strong { font-size: 3.4rem; line-height: 1; }

@@ -153,7 +153,13 @@ function teclado(e, a) {
 .relogio { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-variant-numeric: tabular-nums; font-size: 1.2rem; }
 .relogio.urgente { color: var(--mau-madeira); animation: pulsar 1s infinite; }
 @keyframes pulsar { 50% { opacity: .5; } }
-.palco-cena { border-radius: 8px; overflow: hidden; box-shadow: 0 24px 50px -18px rgba(0, 0, 0, .6); border: 3px solid #4A3627; }
+.palco-cena {
+  position: relative; border-radius: 4px; overflow: hidden;
+  /* moldura de madeira com passe-partout, como uma fotografia do posto */
+  padding: 10px; background: var(--papel); border: 6px solid #4A3627;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2), var(--sombra-papel);
+}
+.palco-cena::after { content: ""; position: absolute; inset: 10px; pointer-events: none; background-image: var(--grao); background-size: 180px; mix-blend-mode: overlay; opacity: .35; box-shadow: inset 0 0 40px rgba(40, 25, 10, .35); }
 .cena { display: block; width: 100%; height: auto; }
 .deslizar { display: none; }
 /* em ecrãs estreitos a cena fica maior e desliza na horizontal, para os elementos se poderem tocar */

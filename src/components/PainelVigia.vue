@@ -184,7 +184,7 @@ const angulo = computed(() => -90 + 180 * (s.perigoDoDia.valor / 100));
 .marcos li.feito .pino { background: var(--folhosa); border-color: #D8F0C4; }
 .marcos li.atual .pino { background: var(--lampada); border-color: #FFE7AE; box-shadow: var(--brilho-candeeiro); }
 .marcos li.atual .nome { color: var(--texto); font-weight: 700; }
-.marcos .pts { font-size: .68rem; opacity: .7; }
+.marcos .pts { font-size: .7rem; color: var(--texto-2); }
 
 /* pontos */
 .grande { margin-top: 2px; }

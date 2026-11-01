@@ -37,6 +37,8 @@ const desafios = computed(() => zona.value.desafios.map((id, i) => {
 
     <ol class="desafios">
       <li v-for="(d, i) in desafios" :key="d.id" class="papel desafio" :class="{ feito: d.r, indisponivel: !d.disponivel }">
+        <span class="fita" :class="i % 2 ? 'dir' : 'esq'" aria-hidden="true"></span>
+        <span v-if="d.r" class="selo-feito" aria-hidden="true">Feito</span>
         <p class="passo">Desafio {{ i + 1 }} · <component :is="d.tipoInfo.icone" aria-hidden="true" /> {{ d.tipoInfo.nome }}</p>
         <h3>{{ d.titulo }}</h3>
         <p class="texto">{{ d.tipoInfo.texto }}</p>
@@ -73,7 +75,10 @@ const desafios = computed(() => zona.value.desafios.map((id, i) => {
 .etiqueta { color: var(--lampada); }
 .selo { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--bom-madeira); background: rgba(140, 191, 104, .14); border: 1px solid rgba(140, 191, 104, .4); padding: 8px 14px; border-radius: 99px; }
 .desafios { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
-.desafio { padding: 20px 22px; display: flex; flex-direction: column; gap: 6px; }
+.desafio { position: relative; padding: 24px 22px 20px; display: flex; flex-direction: column; gap: 6px; transform: rotate(-.35deg); transition: transform var(--dur-media) var(--ease-saida), box-shadow var(--dur-media); }
+.desafio:nth-child(even) { transform: rotate(.4deg); }
+.desafio:hover { transform: translateY(-3px) rotate(0); box-shadow: var(--sombra-papel-alta); }
+.selo-feito { position: absolute; top: 18px; right: 18px; padding: 3px 10px; border: 2.5px double var(--bom-papel); border-radius: 4px; color: var(--bom-papel); font: 600 .78rem var(--mono); letter-spacing: .14em; text-transform: uppercase; transform: rotate(8deg); opacity: .8; }
 .desafio.indisponivel { opacity: .6; }
 .passo { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: .9rem; color: #4D5A47; }
 .desafio h3 { font-size: 1.6rem; }

@@ -81,6 +81,16 @@ function teclado(e, id) {
         <circle cx="1" cy="1" r=".6" fill="#6B5B3E" opacity=".18" />
         <circle cx="4" cy="4" r=".5" fill="#6B5B3E" opacity=".12" />
       </pattern>
+      <radialGradient id="cantos" cx="50%" cy="50%" r="75%">
+        <stop offset=".6" stop-color="#6B4A20" stop-opacity="0" /><stop offset="1" stop-color="#6B4A20" stop-opacity=".28" />
+      </radialGradient>
+      <radialGradient id="mancha">
+        <stop offset=".55" stop-color="#9C6B2E" stop-opacity="0" /><stop offset=".8" stop-color="#9C6B2E" stop-opacity=".12" /><stop offset=".86" stop-color="#9C6B2E" stop-opacity=".22" /><stop offset="1" stop-color="#9C6B2E" stop-opacity="0" />
+      </radialGradient>
+      <linearGradient id="dobra-v"><stop offset="0" stop-color="#5A3E1E" stop-opacity="0" /><stop offset="1" stop-color="#5A3E1E" stop-opacity=".16" /></linearGradient>
+      <linearGradient id="dobra-v2"><stop offset="0" stop-color="#fff" stop-opacity=".35" /><stop offset="1" stop-color="#fff" stop-opacity="0" /></linearGradient>
+      <linearGradient id="dobra-h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5A3E1E" stop-opacity="0" /><stop offset="1" stop-color="#5A3E1E" stop-opacity=".14" /></linearGradient>
+      <linearGradient id="dobra-h2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".3" /><stop offset="1" stop-color="#fff" stop-opacity="0" /></linearGradient>
       <radialGradient id="mancha-risco">
         <stop offset="0" stop-color="currentColor" stop-opacity=".55" />
         <stop offset=".7" stop-color="currentColor" stop-opacity=".25" />
@@ -135,20 +145,41 @@ function teclado(e, id) {
     >
       <circle class="alvo" r="58" />
       <circle v-if="sugerida === z.id && z.estado === 'por-explorar'" class="pulso" r="34" />
-      <circle class="disco" r="26" />
-      <component :is="z.estado === 'concluida' ? Check : z.estado === 'bloqueada' ? Lock : ICONES[z.id]" class="icone" x="-13" y="-13" :size="26" :stroke-width="2.4" />
+      <!-- alfinete: sombra no papel e cabeça que se levanta ao passar por cima -->
+      <ellipse class="sombra-pino" cx="5" cy="9" rx="25" ry="22" />
+      <g class="cabeca">
+        <circle class="disco" r="26" />
+        <path class="brilho-pino" d="M-15,-14 A20,20 0 0 1 4,-22" />
+        <component :is="z.estado === 'concluida' ? Check : z.estado === 'bloqueada' ? Lock : ICONES[z.id]" class="icone" x="-13" y="-13" :size="26" :stroke-width="2.4" />
+      </g>
       <text class="nome" y="48" text-anchor="middle">{{ z.nome }}</text>
       <text v-if="camada === 'risco'" class="detalhe" y="66" text-anchor="middle">Risco {{ z.risco }}% · {{ z.classe.nome }}</text>
     </g>
 
     <rect class="grao" :width="W" :height="H" fill="url(#grao)" />
+    <!-- papel com uso: dobras em cruz, manchas e cantos mais escuros -->
+    <g class="uso" aria-hidden="true">
+      <rect :width="W" :height="H" fill="url(#cantos)" />
+      <circle cx="840" cy="560" r="70" fill="url(#mancha)" />
+      <circle cx="140" cy="120" r="46" fill="url(#mancha)" opacity=".7" />
+      <rect :x="W / 2 - 14" y="0" width="14" :height="H" fill="url(#dobra-v)" />
+      <rect :x="W / 2" y="0" width="14" :height="H" fill="url(#dobra-v2)" />
+      <rect x="0" :y="H / 2 - 12" :width="W" height="12" fill="url(#dobra-h)" />
+      <rect x="0" :y="H / 2" :width="W" height="12" fill="url(#dobra-h2)" />
+    </g>
     <rect :width="W" :height="H" fill="none" stroke="#23321F" stroke-width="2" />
   </svg>
 </template>
 
 <style scoped>
 .mapa { display: block; width: 100%; height: auto; user-select: none; }
-.fundo { fill: var(--carta); }
+.fundo { fill: #E6E2CB; }
+.uso { pointer-events: none; mix-blend-mode: multiply; }
+.sombra-pino { fill: rgba(40, 28, 10, .28); filter: blur(3px); transition: transform var(--dur-media) var(--ease-saida), opacity var(--dur-media); }
+.cabeca { transition: transform var(--dur-media) var(--ease-mola); }
+.brilho-pino { fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; opacity: .5; pointer-events: none; }
+.zona:hover .cabeca, .zona:focus-visible .cabeca { transform: translateY(-4px); }
+.zona:hover .sombra-pino, .zona:focus-visible .sombra-pino { transform: translate(3px, 4px) scale(1.08); opacity: .8; }
 .quadricula line { stroke: var(--tinta); stroke-width: .8; opacity: .13; }
 .quadricula text { font: 500 11px var(--cond); fill: var(--tinta); opacity: .5; }
 .curvas path { fill: none; stroke: #9C7A55; stroke-width: .7; opacity: .5; }

@@ -35,6 +35,8 @@ function entrar() {
   <div class="vista-mapa">
     <section class="mesa" aria-label="Carta do parque">
       <div class="carta papel">
+        <span class="pionese" aria-hidden="true"></span><span class="pionese d" aria-hidden="true"></span>
+        <span class="pionese b" aria-hidden="true"></span><span class="pionese b d" aria-hidden="true"></span>
         <div class="carta-topo">
           <p class="carta-nome">Parque Natural da Serra da Estrela · folha 17</p>
           <div class="vistas" role="group" aria-label="Camada do mapa">
@@ -76,6 +78,7 @@ function entrar() {
       </div>
 
       <article class="ficha papel">
+        <span class="fita dir" aria-hidden="true"></span>
         <p class="estado" :class="estado">
           <CheckCircle2 v-if="estado === 'concluida'" aria-hidden="true" />
           <Lock v-else-if="estado === 'bloqueada'" aria-hidden="true" />
@@ -117,7 +120,11 @@ function entrar() {
 
 <style scoped>
 .vista-mapa { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: 28px; align-items: start; }
-.carta { padding: 14px 14px 12px; }
+.carta { position: relative; padding: 18px 18px 14px; transform: rotate(-.25deg); }
+/* pioneses de latão a prender a carta à mesa */
+.pionese { position: absolute; top: 6px; left: 6px; width: 14px; height: 14px; border-radius: 50%; z-index: 2; background: radial-gradient(circle at 35% 30%, #FFE7AE, var(--latao) 50%, #6E5122); box-shadow: 2px 3px 3px rgba(0, 0, 0, .45); }
+.pionese.d { left: auto; right: 6px; }
+.pionese.b { top: auto; bottom: 6px; }
 .carta-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
 .carta-nome { font-family: var(--serif); font-style: italic; font-size: 1.1rem; }
 .vistas { display: inline-flex; border: 1.5px solid var(--tinta); border-radius: var(--raio); overflow: hidden; }
@@ -144,14 +151,17 @@ function entrar() {
 .amostra.trilho { border-radius: 0; height: 0; width: 22px; border: 0; border-top: 2px dashed #8A3B1E; }
 
 .caderno { display: grid; gap: 16px; position: sticky; top: 16px; }
-.alerta { background: rgba(217, 72, 28, .14); border: 1px solid rgba(217, 72, 28, .5); border-left: 5px solid var(--brasa); border-radius: var(--raio); padding: 14px 16px; }
+.alerta { position: relative; background: linear-gradient(180deg, rgba(217, 72, 28, .2), rgba(217, 72, 28, .1)); border: 1px solid rgba(217, 72, 28, .5); border-left: 5px solid var(--brasa); border-radius: var(--raio); padding: 14px 16px; box-shadow: var(--sombra-metal); }
+.alerta .etiqueta { font-family: var(--mono); letter-spacing: .06em; }
+.alerta:not(.concluido) .etiqueta::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--brasa); margin-left: 4px; box-shadow: 0 0 8px var(--brasa); animation: piscar 1.2s steps(2) infinite; }
+@keyframes piscar { 50% { opacity: .2; } }
 .alerta.concluido { background: rgba(140, 191, 104, .12); border-color: rgba(140, 191, 104, .5); border-left-color: var(--folhosa); }
 .alerta .etiqueta { color: var(--mau-madeira); }
 .alerta.concluido .etiqueta { color: var(--bom-madeira); }
 .alerta-texto { font-family: var(--serif); font-size: 1.2rem; line-height: 1.35; margin-top: 6px; }
 .ligacao { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; background: none; border: 0; padding: 0; color: var(--lampada); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 
-.ficha { padding: 20px 20px 22px; }
+.ficha { position: relative; padding: 22px 20px 22px; }
 .ficha h3 { font-size: 1.8rem; margin-top: 6px; }
 .estado { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: .9rem; }
 .estado.concluida { color: var(--bom-papel); }
