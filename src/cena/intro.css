@@ -1,6 +1,13 @@
 /* ================= Intro ================= */
 #historia { height: 720svh; position: relative; }
 .palco { position: sticky; top: 0; height: 100svh; overflow: hidden; background: #86B7D3; }
+/* grão de película e vinheta: tiram o ar de vetor plano sem pesar no desenho */
+.palco::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background-image: var(--grao), radial-gradient(ellipse 120% 90% at 50% 45%, transparent 55%, rgba(10, 12, 24, .35));
+  background-size: 180px 180px, 100% 100%;
+  mix-blend-mode: overlay; opacity: .55;
+}
 #cena { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
 .hud-intro {
@@ -19,13 +26,15 @@
 .leituras {
   display: flex; margin: 0;
   background: rgba(16, 22, 58, .62);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  border: 1px solid rgba(243, 234, 219, .14);
   border-radius: var(--raio);
   font-variant-numeric: tabular-nums;
 }
 .leituras div { padding: 6px 14px; }
 .leituras div + div { border-left: 1px solid rgba(243, 234, 219, .2); }
 .leituras dt { font-size: .78rem; color: var(--texto-2); }
-.leituras dd { margin: 0; font-size: 1.35rem; font-weight: 600; line-height: 1.1; }
+.leituras dd { margin: 0; font-family: var(--mono); font-size: 1.3rem; font-weight: 600; line-height: 1.15; letter-spacing: -.02em; }
 
 .titulo {
   position: absolute; left: var(--gutter); top: 11svh;
