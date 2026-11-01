@@ -734,6 +734,10 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
     if (entrada > 0) {
       ctx.fillStyle = `rgba(46,33,25,${entrada})`;
       ctx.fillRect(0, 0, W, H);
+      // a luz do candeeiro, igual à do interior do posto, para não haver corte
+      const gl = ctx.createRadialGradient(W / 2, 120, 10, W / 2, 120, Math.max(W, H) * 0.7);
+      gl.addColorStop(0, `rgba(246,182,80,${0.16 * entrada})`); gl.addColorStop(1, 'rgba(246,182,80,0)');
+      ctx.fillStyle = gl; ctx.fillRect(0, 0, W, H);
     }
   }
 

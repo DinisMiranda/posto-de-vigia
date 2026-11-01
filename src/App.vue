@@ -4,6 +4,7 @@ import { RotateCcw } from 'lucide-vue-next';
 import CenaAbertura from './components/CenaAbertura.vue';
 import PainelVigia from './components/PainelVigia.vue';
 import AvisoNovidades from './components/AvisoNovidades.vue';
+import JanelasCabine from './components/JanelasCabine.vue';
 import { useVigiaStore } from './stores/vigia.js';
 import { useRouter } from 'vue-router';
 
@@ -22,9 +23,7 @@ function recomecar() {
   <CenaAbertura />
 
   <main id="posto" tabindex="-1">
-    <div class="janelas" aria-hidden="true">
-      <span v-for="i in 4" :key="i" class="vidro"></span>
-    </div>
+    <JanelasCabine />
     <PainelVigia />
     <RouterView v-slot="{ Component, route }">
       <Transition name="vista" mode="out-in">
@@ -63,32 +62,17 @@ function recomecar() {
   min-height: 100vh;
   padding: 0 var(--pad) 40px;
   outline: none;
+  /* interior da cabine: tábuas de madeira com veios, a luz quente do candeeiro e cantos na sombra */
   background:
-    radial-gradient(ellipse 60% 420px at 40% 150px, rgba(240, 180, 60, .13), transparent 70%),
-    repeating-linear-gradient(90deg, rgba(0, 0, 0, .09) 0 1px, transparent 1px 160px),
+    radial-gradient(ellipse 70% 520px at 50% 120px, rgba(246, 182, 80, .16), transparent 70%),
+    radial-gradient(ellipse 140% 100% at 50% 0%, transparent 60%, rgba(0, 0, 0, .35)),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, .22) 0 1px, rgba(255, 220, 170, .03) 1px 2px, transparent 2px 172px),
+    var(--veios),
     var(--madeira);
+  background-size: auto, auto, auto, 600px 240px, auto;
 }
-.janelas {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
-  margin: 0 calc(-1 * var(--pad));
-  padding: 14px var(--pad) 0;
-  height: 110px;
-  background: #4A3627;
-  border-bottom: 12px solid #4A3627;
-  box-shadow: 0 10px 20px -8px rgba(0, 0, 0, .5);
-}
-.vidro {
-  border-radius: 2px 2px 0 0;
-  background:
-    linear-gradient(transparent 62%, #0F172B 62% 70%, #0A0F1E 70%),
-    radial-gradient(circle at 20% 30%, rgba(236, 236, 220, .8) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 70% 18%, rgba(236, 236, 220, .7) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 45% 45%, rgba(236, 236, 220, .6) 0 1px, transparent 1.5px),
-    linear-gradient(#141B3D, #2A3360);
-  box-shadow: inset 0 0 0 3px #2E2119;
-}
-.vista-enter-active, .vista-leave-active { transition: opacity .22s, transform .22s; }
-.vista-enter-from { opacity: 0; transform: translateY(8px); }
+.vista-enter-active, .vista-leave-active { transition: opacity var(--dur-media) var(--ease-saida), transform var(--dur-media) var(--ease-saida); }
+.vista-enter-from { opacity: 0; transform: translateY(12px); }
 .vista-leave-to { opacity: 0; }
 .rodape {
   display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px;
@@ -105,7 +89,5 @@ function recomecar() {
 .confirmar h2 { font-size: 1.6rem; }
 .confirmar p { margin: 10px 0 18px; }
 .confirmar .acoes { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
-@media (max-width: 520px) {
-  .janelas { height: 70px; gap: 8px; }
-}
+
 </style>

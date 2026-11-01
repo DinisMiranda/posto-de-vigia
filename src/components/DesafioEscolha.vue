@@ -4,6 +4,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { ArrowRight, Lightbulb, Timer } from 'lucide-vue-next';
 import ListaOpcoes from './ListaOpcoes.vue';
+import MarcasProgresso from './MarcasProgresso.vue';
 
 const props = defineProps({
   desafio: { type: Object, required: true },
@@ -81,7 +82,12 @@ function seguinte() {
   resolvida.value = false;
   comPista.value = false;
   arrancarRelogio();
-  document.getElementById('escolha-pergunta')?.focus();
+  focarDepois = true;
+}
+let focarDepois = false;
+function focarPergunta() {
+  if (focarDepois) document.getElementById('escolha-pergunta')?.focus();
+  focarDepois = false;
 }
 
 watch(() => props.dificil, arrancarRelogio, { immediate: true });
@@ -89,14 +95,16 @@ onBeforeUnmount(() => clearInterval(relogio));
 </script>
 
 <template>
-  <section class="papel cartao" aria-live="polite">
+  <section class="caderno-campo cartao" aria-live="polite">
+    <span class="fita esq" aria-hidden="true"></span>
+    <span class="fita dir" aria-hidden="true"></span>
     <div class="topo">
-      <ol class="progresso" :aria-label="`Pergunta ${indice + 1} de ${perguntas.length}`">
-        <li v-for="(q, i) in perguntas" :key="q.id" :class="{ feita: i < indice, atual: i === indice }"></li>
-      </ol>
-      <p v-if="dificil" class="relogio" :class="{ urgente: tempo <= 7 && !resolvida }"><Timer aria-hidden="true" /> {{ tempo }} s</p>
+      <MarcasProgresso :total="perguntas.length" :feitas="indice + (resolvida ? 1 : 0)" />
+      <p class="numero">Pergunta {{ indice + 1 }} de {{ perguntas.length }}</p>
+      <p v-if="dificil" class="relogio leitura" :class="{ urgente: tempo <= 7 && !resolvida }"><Timer aria-hidden="true" /> {{ tempo }} s</p>
     </div>
-    <p class="numero">Pergunta {{ indice + 1 }} de {{ perguntas.length }}</p>
+    <Transition name="pagina" mode="out-in" @after-enter="focarPergunta">
+    <div :key="indice">
     <h3 id="escolha-pergunta" tabindex="-1" class="enunciado">{{ p.enunciado }}</h3>
 
     <ListaOpcoes
@@ -118,8 +126,11 @@ onBeforeUnmount(() => clearInterval(relogio));
       <p>{{ p.explicacao }}</p>
     </div>
 
+    </div>
+    </Transition>
+
     <div class="acoes">
-      <button v-if="resolvida" type="button" class="botao primario" @click="seguinte">
+      <button v-if="resolvida" type="button" class="botao primario vivo" @click="seguinte">
         {{ ultima ? 'Ver resultado' : 'Pergunta seguinte' }} <ArrowRight aria-hidden="true" />
       </button>
     </div>
@@ -127,21 +138,17 @@ onBeforeUnmount(() => clearInterval(relogio));
 </template>
 
 <style scoped>
-.cartao { padding: 26px 26px 28px; }
-.topo { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
-.progresso { list-style: none; display: flex; gap: 6px; padding: 0; margin: 0; flex: 1; }
-.progresso li { flex: 1; height: 6px; border-radius: 3px; background: rgba(35, 50, 31, .15); }
-.progresso li.feita { background: var(--tinta); }
-.progresso li.atual { background: var(--brasa); }
+.topo { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; min-height: 40px; }
+.topo .relogio { margin-left: auto; }
 .relogio { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .relogio.urgente { color: var(--mau-papel); animation: pulsar 1s infinite; }
 @keyframes pulsar { 50% { opacity: .5; } }
-.numero { font-weight: 600; color: #4D5A47; }
+.numero { font-family: var(--mao); font-size: 1.5rem; line-height: 1; color: var(--lapis); white-space: nowrap; }
 .enunciado { font-family: var(--serif); font-size: 1.45rem; line-height: 1.3; margin: 6px 0 18px; outline: none; }
 .aviso { margin-top: 12px; font-weight: 600; color: var(--mau-papel); }
 .pista { display: flex; gap: 8px; margin-top: 12px; padding: 10px 12px; border-radius: 6px; background: #F7E7C2; color: #5E4310; }
 .pista svg { flex: none; margin-top: 3px; }
-.explicacao { margin-top: 16px; padding: 14px 16px; border-radius: 8px; border-left: 5px solid; }
+.explicacao { margin-top: 16px; padding: 14px 16px; border-radius: 4px; border-left: 5px solid; transform: rotate(-.35deg); box-shadow: 0 1px 2px rgba(60, 40, 10, .15), 0 10px 18px -12px rgba(60, 40, 10, .45); }
 .explicacao.bem { background: #E2EFD6; border-color: var(--bom-papel); }
 .explicacao.mal { background: #F5E1D8; border-color: var(--mau-papel); }
 .veredicto { font-weight: 700; font-size: 1.1rem; margin-bottom: 4px; }
