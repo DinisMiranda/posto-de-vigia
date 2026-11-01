@@ -30,8 +30,12 @@ function estadoInicial() {
 }
 
 export const useVigiaStore = defineStore('vigia', () => {
-  const guardado = ler();
-  const base = { ...estadoInicial(), ...(guardado || {}) };
+  // junta o que estava guardado com o estado inicial, para aguentar dados antigos ou incompletos
+  const guardado = ler() || {};
+  const inicial = estadoInicial();
+  const base = { ...inicial, ...guardado };
+  base.zonas = inicial.zonas.map(z => ({ ...z, ...(guardado.zonas?.find(g => g.id === z.id) || {}) }));
+  if (!guardado.encosta?.parcelas) base.encosta = inicial.encosta;
 
   const zonas = ref(base.zonas);
   const pontosVigilancia = ref(base.pontosVigilancia);
