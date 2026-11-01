@@ -9,7 +9,7 @@ const routes = [
   { path: '/quiz-inicial', name: 'quiz-inicial', component: () => import('./views/VistaQuiz.vue'), props: { tipo: 'inicial' } },
   { path: '/zona/:id', name: 'zona', component: () => import('./views/VistaZona.vue'), props: true },
   { path: '/zona/:id/:desafio', name: 'desafio', component: () => import('./views/VistaDesafio.vue'), props: true },
-  { path: '/observatorio/:id?', name: 'observatorio', component: EmBreve, props: true },
+  { path: '/observatorio/:id?', name: 'observatorio', component: () => import('./views/VistaObservatorio.vue'), props: true },
   { path: '/desafio-final', name: 'desafio-final', component: () => import('./views/VistaQuiz.vue'), props: { tipo: 'final' } },
   { path: '/cartao', name: 'cartao', component: EmBreve },
   { path: '/:caminho(.*)*', redirect: '/' },
