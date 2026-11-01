@@ -98,7 +98,8 @@ function teclado(e, a) {
       <p v-else-if="guiado" class="guiado">Modo guiado: os elementos em que podes tocar estão marcados.</p>
     </div>
 
-    <div class="palco-cena">
+    <p class="deslizar" aria-hidden="true">Desliza para ver a cena toda ↔</p>
+    <div class="palco-cena" tabindex="-1">
       <svg class="cena" :viewBox="`0 ${topo} 1200 ${700 - topo}`" role="group" :aria-label="`Cena: ${desafio.titulo}. ${desafio.instrucao}`">
         <CenaFundo :tipo="desafio.cenario" />
         <g v-for="(e, i) in elementos" :key="e.id || 'd' + i" :transform="`translate(${e.x},${e.y}) scale(${e.e || 1})`">
@@ -154,6 +155,13 @@ function teclado(e, a) {
 @keyframes pulsar { 50% { opacity: .5; } }
 .palco-cena { border-radius: 8px; overflow: hidden; box-shadow: 0 24px 50px -18px rgba(0, 0, 0, .6); border: 3px solid #4A3627; }
 .cena { display: block; width: 100%; height: auto; }
+.deslizar { display: none; }
+/* em ecrãs estreitos a cena fica maior e desliza na horizontal, para os elementos se poderem tocar */
+@media (max-width: 640px) {
+  .palco-cena { overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+  .cena { width: 660px; max-width: none; }
+  .deslizar { display: block; font-size: .9rem; color: var(--texto-2); margin-bottom: -6px; }
+}
 
 .alvo { cursor: pointer; outline: none; }
 .alvo .toque { fill: transparent; stroke: transparent; stroke-width: 3; }

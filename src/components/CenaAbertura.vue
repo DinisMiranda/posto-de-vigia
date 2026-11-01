@@ -33,10 +33,17 @@ onMounted(() => {
   });
 });
 onBeforeUnmount(() => parar?.());
+
+// o router usa o hash para as rotas, por isso o salto para o posto é feito à mão
+function saltar() {
+  const posto = document.getElementById('posto');
+  posto.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  posto.focus({ preventScroll: true });
+}
 </script>
 
 <template>
-  <a class="saltar" href="#posto">Saltar para o mapa</a>
+  <a class="saltar" href="#/" @click.prevent="saltar">Saltar para o mapa</a>
 
   <section id="historia" ref="historia" aria-label="Introdução: um dia no posto de vigia">
     <div class="palco">
