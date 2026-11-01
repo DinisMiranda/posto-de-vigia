@@ -22,8 +22,54 @@
 
   --serif: 'Zilla Slab', Rockwell, 'Roboto Slab', Georgia, serif;
   --cond: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif;
+  /* leituras de instrumentos (hora, humidade, pontos) */
+  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  /* notas à mão no caderno de campo */
+  --mao: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
   --gutter: clamp(16px, 3vw, 40px);
+
+  /* superfícies */
+  --papel: #EDE6D2;
+  --papel-2: #E3DAC2;
+  --papel-linha: rgba(63, 94, 140, .22);
+  --papel-margem: rgba(196, 70, 48, .45);
+  --lapis: #3B3A3A;
+  --carimbo: #A83A26;
+  --fita: rgba(232, 214, 160, .78);
+  --latao: #B98A3E;
+  --latao-claro: #E6C27A;
+  --vidro: rgba(255, 255, 255, .08);
+
+  /* raios */
+  --raio-xs: 2px;
   --raio: 6px;
+  --raio-lg: 12px;
+  --raio-pilula: 999px;
+
+  /* espaçamentos (escala de 4) */
+  --e-1: 4px; --e-2: 8px; --e-3: 12px; --e-4: 16px; --e-5: 24px; --e-6: 32px; --e-7: 48px; --e-8: 64px;
+
+  /* escala tipográfica (razão 1.2, fluida nos títulos) */
+  --t-xs: .78rem; --t-sm: .9rem; --t-md: 1.0625rem; --t-lg: 1.25rem; --t-xl: 1.5rem;
+  --t-2xl: clamp(1.75rem, 1.4rem + 1.2vw, 2.2rem);
+  --t-3xl: clamp(2.1rem, 1.6rem + 2vw, 2.9rem);
+
+  /* sombras: papel pousado na mesa, objetos de metal, brilho do candeeiro */
+  --sombra-papel: 0 1px 0 rgba(0, 0, 0, .25), 0 2px 3px rgba(0, 0, 0, .18), 0 18px 32px -14px rgba(0, 0, 0, .55), 0 40px 70px -30px rgba(0, 0, 0, .5);
+  --sombra-papel-alta: 0 2px 3px rgba(0, 0, 0, .2), 0 28px 50px -18px rgba(0, 0, 0, .6);
+  --sombra-metal: inset 0 1px 0 rgba(255, 255, 255, .14), inset 0 -1px 0 rgba(0, 0, 0, .35), 0 6px 18px -8px rgba(0, 0, 0, .7);
+  --brilho-candeeiro: 0 0 0 1px rgba(240, 180, 60, .25), 0 0 24px -4px rgba(240, 180, 60, .45);
+
+  /* movimento */
+  --ease-saida: cubic-bezier(.2, .8, .2, 1);
+  --ease-mola: cubic-bezier(.3, 1.4, .5, 1);
+  --ease-entrada: cubic-bezier(.6, 0, .8, .2);
+  --dur-curta: .16s; --dur-media: .32s; --dur-longa: .7s;
+
+  /* texturas desenhadas aqui (sem imagens externas) */
+  --grao: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --fibras: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.012 .09' numOctaves='4' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .36 0 0 0 0 .2 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+  --veios: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='240'%3E%3Cfilter id='v'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .18' numOctaves='3' seed='8'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .06 0 0 0 0 .03 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23v)'/%3E%3C/svg%3E");
   color-scheme: dark;
 }
 
@@ -49,28 +95,38 @@ button { font: inherit; color: inherit; }
 /* ================= Peças comuns ================= */
 a { color: var(--lampada); }
 .botao {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  position: relative;
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--e-2);
   min-height: 46px; padding: 0 20px;
   border-radius: var(--raio); border: 1.5px solid transparent;
   font-weight: 600; font-size: 1rem; text-decoration: none; cursor: pointer;
-  transition: background-color .15s, border-color .15s, transform .1s, opacity .15s;
+  transition: background-color var(--dur-curta), border-color var(--dur-curta), transform var(--dur-curta) var(--ease-saida), box-shadow var(--dur-media), opacity var(--dur-curta);
 }
-.botao:active { transform: translateY(1px); }
+.botao:hover:not(:disabled) { transform: translateY(-1px); }
+.botao:active:not(:disabled) { transform: translateY(1px) scale(.985); }
 .botao:disabled { opacity: .45; cursor: not-allowed; transform: none; }
-.botao.primario { background: var(--brasa); color: #FFF6EC; }
-.botao.primario:hover:not(:disabled) { background: var(--brasa-escura); }
-.botao.secundario { background: transparent; color: var(--texto); border-color: var(--madeira-3); }
-.botao.secundario:hover:not(:disabled) { background: var(--madeira-3); }
-.botao.no-papel { color: var(--tinta); border-color: rgba(35, 50, 31, .45); background: transparent; }
-.botao.no-papel:hover:not(:disabled) { background: rgba(35, 50, 31, .08); }
+.botao svg { transition: transform var(--dur-media) var(--ease-mola); }
+.botao:hover:not(:disabled) svg:last-child { transform: translateX(3px); }
+.botao.primario {
+  background: linear-gradient(180deg, #E4592B, var(--brasa) 55%, #C43F17);
+  color: #FFF6EC;
+  box-shadow: inset 0 1px 0 rgba(255, 220, 190, .35), inset 0 -2px 0 rgba(0, 0, 0, .18), 0 6px 14px -6px rgba(217, 72, 28, .6);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, .2);
+}
+.botao.primario:hover:not(:disabled) { background: linear-gradient(180deg, #EC6534, #DE4E1F 55%, #B93A14); box-shadow: inset 0 1px 0 rgba(255, 220, 190, .4), inset 0 -2px 0 rgba(0, 0, 0, .18), 0 10px 20px -8px rgba(217, 72, 28, .75); }
+.botao.secundario { background: rgba(243, 234, 219, .03); color: var(--texto); border-color: var(--madeira-3); }
+.botao.secundario:hover:not(:disabled) { background: var(--madeira-3); border-color: #6E5440; }
+.botao.no-papel { color: var(--tinta); border-color: rgba(35, 50, 31, .45); background: rgba(255, 255, 255, .25); }
+.botao.no-papel:hover:not(:disabled) { background: rgba(255, 255, 255, .55); }
 .botao.pequeno { min-height: 38px; padding: 0 14px; font-size: .95rem; }
 
-/* papel: a carta militar e as fichas do caderno */
+/* papel: a carta militar, as fichas e o caderno de campo */
 .papel {
-  background: var(--carta);
+  background-color: var(--papel);
+  background-image: var(--fibras), linear-gradient(170deg, rgba(255, 255, 255, .35), transparent 40%, rgba(120, 90, 40, .06));
   color: var(--tinta);
-  border-radius: 3px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, .35), 0 24px 50px -18px rgba(0, 0, 0, .6);
+  border-radius: var(--raio-xs);
+  box-shadow: var(--sombra-papel);
 }
 .papel .muted { color: #4D5A47; }
 
@@ -78,8 +134,10 @@ a { color: var(--lampada); }
   display: inline-flex; align-items: center; gap: 6px;
   font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
 }
+.leitura { font-family: var(--mono); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.cabecalho-vista h2 { text-wrap: balance; }
 .cabecalho-vista { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; margin-bottom: 22px; }
-.cabecalho-vista h2 { font-size: clamp(1.9rem, 4vw, 2.6rem); }
+.cabecalho-vista h2 { font-size: var(--t-3xl); }
 .cabecalho-vista .lead { font-family: var(--serif); font-size: 1.2rem; color: var(--texto-2); margin-top: 6px; max-width: 60ch; }
 .voltar { display: inline-flex; align-items: center; gap: 6px; color: var(--texto-2); text-decoration: none; font-weight: 600; margin-bottom: 14px; }
 .voltar:hover { color: var(--texto); }
