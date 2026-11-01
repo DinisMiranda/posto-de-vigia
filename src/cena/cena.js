@@ -1,6 +1,12 @@
 /* Cena de abertura: um dia inteiro no posto de vigia, guiado pelo scroll.
    Tudo é desenhado em coordenadas de "mundo" (1600 x 1000) e a câmara
-   faz o enquadramento e o zoom final para dentro da janela da cabine. */
+   faz o enquadramento e o zoom final para dentro da janela da cabine.
+
+   Quatro planos, do mais claro ao mais escuro: serra ao longe, cumeada com
+   floresta (onde começa o incêndio), a colina da torre e o primeiro plano.
+   A torre, a colina, as árvores do primeiro plano e as nuvens são desenhadas
+   à mão com curvas de Bézier; só as copas lá ao longe são geradas. Tudo o que
+   é atmosférico (fumo, névoa, luz) usa gradientes de bordas suaves. */
 export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, entradas, aoEntrar }) {
   const ctx = canvas.getContext('2d');
   const reduzir = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -9,6 +15,7 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
   const TORRE = { x: 1060, cabY: 300, cabH: 82, cabW: 128 };
   const JANELA = { x: 1020, y: 320 };      // alvo do zoom: o vidro da esquerda, aceso
   const FOGO = { x: 330 };
+  const CHAO = 652;                        // chão da clareira onde assenta a torre
 
   // ---------- utilitários ----------
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -25,7 +32,6 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
   const hex = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   const mistura = (a, b, t) => [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
   const rgb = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
-  // rampa de cor ao longo do progresso do dia
   function rampa(paragens) {
     const s = paragens.map(([p, c]) => [p, hex(c)]);
     return p => {
@@ -37,147 +43,294 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
     };
   }
   const tempoDia = (dia, por, noite) => rampa([[0, dia], [0.42, dia], [0.55, por], [0.7, noite], [1, noite]]);
+  // mancha suave: gradiente radial sem borda nenhuma, opcionalmente achatada
+  function mancha(x, y, r, cor, a, achatar = 1) {
+    if (a <= 0.003 || r <= 0) return;
+    ctx.save();
+    ctx.translate(x, y); ctx.scale(1, achatar);
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+    g.addColorStop(0, rgb(cor, a)); g.addColorStop(0.45, rgb(cor, a * 0.7)); g.addColorStop(1, rgb(cor, 0));
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
 
   // ---------- paleta do dia ----------
-  const ceuTopo = rampa([[0, '#86B7D3'], [0.3, '#5E9CCB'], [0.45, '#7391BE'], [0.53, '#525E96'], [0.62, '#2A2F63'], [0.72, '#141B3D'], [1, '#10163A']]);
-  const ceuBase = rampa([[0, '#E3ECE2'], [0.3, '#D2E5EA'], [0.45, '#F2D39A'], [0.53, '#F09A5B'], [0.62, '#8E5A73'], [0.72, '#2A3360'], [1, '#222A52']]);
-  const camadas = [
-    { cor: tempoDia('#A7BCC3', '#94819C', '#26325A') },
-    { cor: tempoDia('#83A091', '#72637D', '#1C2748') },
-    { cor: tempoDia('#5A7D60', '#4E4B62', '#141D36') },
-    { cor: tempoDia('#3E6045', '#373A4D', '#0F172B') },
-    { cor: tempoDia('#24412D', '#23202E', '#0A0F1E') },
+  const ceuTopo = rampa([[0, '#8DBAD4'], [0.3, '#6AA3CF'], [0.45, '#7896C0'], [0.53, '#565F96'], [0.62, '#2A2F63'], [0.72, '#141B3D'], [1, '#10163A']]);
+  const ceuBase = rampa([[0, '#E6EEE6'], [0.3, '#D6E6EB'], [0.45, '#F2D7A2'], [0.53, '#F0A266'], [0.62, '#8E5A73'], [0.72, '#2A3360'], [1, '#222A52']]);
+  const corPlano = [
+    tempoDia('#B4C7CB', '#B49AA8', '#2A3560'),   // serra ao longe
+    tempoDia('#7F9C8A', '#76687F', '#1C2748'),   // cumeada com floresta
+    tempoDia('#4D6C50', '#4A4458', '#121A33'),   // colina da torre
+    tempoDia('#203528', '#211D2B', '#090E1C'),   // primeiro plano
   ];
+  const corTerra = tempoDia('#BBA37B', '#9C7F72', '#2A2735');
+  const corBetao = tempoDia('#B9B4A8', '#948A92', '#262C45');
   const corMetal = tempoDia('#8A4632', '#5A3440', '#0C1224');
+  const corMetalClaro = tempoDia('#B86A50', '#7A4A55', '#141B33');
   const corParede = tempoDia('#ECE6D6', '#C7A79B', '#1D2640');
   const corTelhado = tempoDia('#A53D2C', '#7A3439', '#0E1426');
-  const corNuvem = rampa([[0, '#FFFFFF'], [0.42, '#FFFFFF'], [0.52, '#F6C39A'], [0.6, '#9A6D86'], [0.72, '#2C3561'], [1, '#2C3561']]);
+  const corNuvemLuz = rampa([[0, '#FFFFFF'], [0.42, '#FFFDF6'], [0.5, '#FFE2BC'], [0.56, '#F2A98A'], [0.64, '#7E5F80'], [0.74, '#2C3561'], [1, '#2C3561']]);
+  const corNuvemSombra = rampa([[0, '#C7D3DE'], [0.42, '#C9D2DC'], [0.5, '#C9A9A6'], [0.56, '#9C7488'], [0.64, '#4A4470'], [0.74, '#1E2650'], [1, '#1E2650']]);
+  const corSolDe = rampa([[0, '#FFE6BD'], [0.15, '#FFF4D2'], [0.6, '#FFF2C8'], [0.85, '#FFC870'], [1, '#FF8A4A']]);
 
-  // ---------- geometria ----------
+  // ---------- relevo ----------
   function linhaCumeada(base, amp, seed) {
     const r = aleatorio(seed);
     const f = [r() * 6, r() * 6, r() * 6, r() * 6];
     return x => base + amp * (0.5 * Math.sin(x * 0.0037 + f[0]) + 0.28 * Math.sin(x * 0.0093 + f[1]) + 0.15 * Math.sin(x * 0.023 + f[2]) + 0.07 * Math.sin(x * 0.061 + f[3]));
   }
-  const alturaMonte = x => 742 - 86 * Math.exp(-(((x - TORRE.x) / 250) ** 2)) + 10 * Math.sin(x * 0.012) + 4 * Math.sin(x * 0.041);
-  const cumeadas = [
-    linhaCumeada(470, 70, 3),
-    linhaCumeada(560, 42, 11),
-    linhaCumeada(655, 34, 23),
-    alturaMonte,
-    linhaCumeada(930, 40, 41),
-  ];
-  const BASE_TORRE = alturaMonte(TORRE.x) + 4;
+  const serraLonge = linhaCumeada(470, 70, 3);
+  const cumeada = linhaCumeada(560, 42, 11);
+  const chaoFrente = linhaCumeada(938, 26, 41);
 
-  // árvores portuguesas, em silhueta. Todos os polígonos no sentido dos ponteiros do relógio
-  // (regra nonzero), para as copas que se sobrepõem não abrirem buracos.
-  function tronco(p, x, y, base, topo, alto, inclina) {
-    p.moveTo(x + inclina - topo, y - alto); p.lineTo(x + inclina + topo, y - alto);
-    p.lineTo(x + base, y); p.lineTo(x - base, y); p.closePath();
-  }
-  const tufo = (p, cx, cy, rx, ry) => { p.moveTo(cx + rx, cy); p.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); };
-  // pinheiro-bravo: tronco alto e um pouco torto; copa irregular em andares assimétricos,
-  // mais larga a meio e a afinar no topo, com ramos à vista entre os tufos
-  function pinheiroBravo(p, x, y, h, r) {
-    const inc = (r() - 0.5) * h * 0.08;
-    tronco(p, x, y, h * 0.028, h * 0.012, h * 0.94, inc);
-    const andares = 5 + (r() * 2 | 0);
-    for (let k = 0; k < andares; k++) {
-      const q = k / (andares - 1);                       // 0 = andar de baixo, 1 = topo
-      const cy = y - h * (0.5 + q * 0.46);
-      const larg = h * (0.15 + 0.1 * Math.sin(q * Math.PI * 0.85)) * (1 - q * 0.45);
-      const lado = (k % 2 ? 1 : -1) * (0.3 + r() * 0.5);
-      const cx = x + inc * (0.5 + q * 0.5) + lado * larg * 0.55;
-      // ramo até ao tufo
-      tronco(p, x + inc * (0.5 + q * 0.5), cy + h * 0.03, h * 0.006, h * 0.004, h * 0.035, lado * larg * 0.5);
-      tufo(p, cx, cy, larg * (0.8 + r() * 0.3), h * (0.058 + r() * 0.03));
-      tufo(p, cx + (r() - 0.5) * larg * 0.9, cy - h * 0.04, larg * (0.5 + r() * 0.3), h * (0.05 + r() * 0.025));
-      tufo(p, cx - lado * larg * 0.4, cy + h * 0.015, larg * (0.45 + r() * 0.2), h * (0.04 + r() * 0.02));
-    }
-  }
-  // eucalipto: muito alto e direito, copa esparsa e pendente
-  function eucalipto(p, x, y, h, r) {
-    tronco(p, x, y, h * 0.018, h * 0.01, h * 0.86, (r() - 0.5) * h * 0.04);
-    for (let i = 0; i < 6; i++) {
-      const cx = x + (r() - 0.45) * h * 0.26, cy = y - h * (0.55 + r() * 0.42);
-      tufo(p, cx, cy, h * (0.035 + r() * 0.035), h * (0.07 + r() * 0.07));
-    }
-  }
-  // sobreiro: tronco curto e grosso que abre em braços, copa larga e baixa
-  function sobreiro(p, x, y, h, r) {
-    tronco(p, x, y, h * 0.08, h * 0.06, h * 0.34, 0);
-    const lado = r() < 0.5 ? -1 : 1;
-    tronco(p, x - lado * h * 0.02, y - h * 0.3, h * 0.04, h * 0.025, h * 0.26, -lado * h * 0.2);
-    tronco(p, x + lado * h * 0.02, y - h * 0.3, h * 0.035, h * 0.02, h * 0.22, lado * h * 0.24);
-    const n = 9 + (r() * 4 | 0);
-    for (let i = 0; i < n; i++) {
-      const ang = (i / n) * Math.PI;
-      const cx = x - Math.cos(ang) * h * (0.32 + r() * 0.2), cy = y - h * (0.58 + Math.sin(ang) * 0.2 + r() * 0.06);
-      tufo(p, cx, cy, h * (0.17 + r() * 0.1), h * (0.11 + r() * 0.05));
-    }
-    tufo(p, x, y - h * 0.7, h * 0.42, h * 0.14);
-  }
-  // carvalho: copa redonda e densa
-  function carvalho(p, x, y, h, r) {
-    tronco(p, x, y, h * 0.05, h * 0.03, h * 0.5, (r() - 0.5) * h * 0.05);
-    for (let i = 0; i < 6; i++) {
-      const cx = x + (r() - 0.5) * h * 0.46, cy = y - h * (0.58 + r() * 0.28), rr = h * (0.14 + r() * 0.09);
-      tufo(p, cx, cy, rr, rr * 0.92);
-    }
-  }
-  const ESPECIES = [pinheiroBravo, eucalipto, sobreiro, carvalho];
-
-  // cada camada: terreno, linha de cumeada (para a luz rasante) e árvores agrupadas
-  // em faixas de 180 unidades, que podem balançar com o vento cada uma à sua maneira
-  function construirCamada(i) {
-    const f = cumeadas[i];
-    const r = aleatorio(100 + i);
-    const terreno = new Path2D();
-    const linha = new Path2D();
-    terreno.moveTo(-200, f(-200)); linha.moveTo(-200, f(-200));
-    for (let x = -200; x <= MW + 200; x += 6) { terreno.lineTo(x, f(x)); linha.lineTo(x, f(x)); }
-    terreno.lineTo(MW + 200, MH + 400); terreno.lineTo(-200, MH + 400); terreno.closePath();
-
-    // pesos de cada espécie [pinheiro-bravo, eucalipto, sobreiro, carvalho] e tamanhos por camada
-    const cfg = [
-      null,
-      { passo: 7, h: [10, 17], mix: [0.25, 0.7, 0, 0.05] },    // eucaliptal distante a norte
-      { passo: 10, h: [20, 34], mix: [0.45, 0.25, 0.15, 0.15] },
-      { passo: 14, h: [32, 58], mix: [0.35, 0.15, 0.3, 0.2] },
-      { passo: 30, h: [100, 190], mix: [0.4, 0.1, 0.35, 0.15] },
-    ][i];
-    const grupos = [];
-    if (cfg) {
-      const porFaixa = new Map();
-      for (let x = -120; x < MW + 120; x += cfg.passo * (0.5 + r() * 1.1)) {
-        if (i === 3 && Math.abs(x - TORRE.x) < 105) continue;       // clareira da torre
-        if (i === 4 && x > 560 && x < 1320 && r() < 0.8) continue;   // abertura em primeiro plano
-        let h = lerp(cfg.h[0], cfg.h[1], r() ** 1.4);
-        let q = r(), e = 0;
-        while (e < 3 && q > cfg.mix[e]) { q -= cfg.mix[e]; e++; }
-        if (e === 1) h *= 1.3;           // os eucaliptos são os mais altos
-        if (e === 2) h *= 0.72;          // os sobreiros, baixos e largos
-        const y = f(x) + h * 0.04 + 2;
-        const faixa = Math.floor((x + 200) / 180);
-        if (!porFaixa.has(faixa)) porFaixa.set(faixa, { p: new Path2D(), x0: faixa * 180 - 110, base: 0, n: 0, tom: (r() - 0.5) * 0.08 });
-        const g = porFaixa.get(faixa);
-        ESPECIES[e](g.p, x, y, h, r);
-        g.base += y; g.n++;
+  // colina da torre, desenhada à mão: sobe da esquerda, aplana numa clareira e desce para leste
+  const COLINA = (() => {
+    const segs = [
+      [[-200, 800], [80, 792], [420, 762], [720, 714]],
+      [[720, 714], [842, 694], [918, 664], [972, CHAO + 2]],
+      [[972, CHAO + 2], [1010, CHAO - 1], [1110, CHAO - 1], [1152, CHAO + 2]],
+      [[1152, CHAO + 2], [1208, 660], [1272, 680], [1362, 702]],
+      [[1362, 702], [1472, 730], [1620, 744], [1800, 754]],
+    ];
+    const pts = [];
+    for (const [a, b, c, d] of segs) {
+      for (let i = 0; i <= 40; i++) {
+        const t = i / 40, u = 1 - t;
+        pts.push([u * u * u * a[0] + 3 * u * u * t * b[0] + 3 * u * t * t * c[0] + t * t * t * d[0],
+          u * u * u * a[1] + 3 * u * u * t * b[1] + 3 * u * t * t * c[1] + t * t * t * d[1]]);
       }
-      for (const g of porFaixa.values()) { g.base /= g.n; grupos.push(g); }
     }
-    return { terreno, linha, grupos };
+    return pts;
+  })();
+  function colinaY(x) {
+    for (let i = 1; i < COLINA.length; i++) {
+      if (x <= COLINA[i][0]) { const [x0, y0] = COLINA[i - 1], [x1, y1] = COLINA[i]; return lerp(y0, y1, (x - x0) / ((x1 - x0) || 1)); }
+    }
+    return COLINA[COLINA.length - 1][1];
   }
-  const camadasDesenho = cumeadas.map((_, i) => construirCamada(i));
-  const BASES = [470, 560, 655, 700, 930];
 
+  // copas ao longe: uma só massa com o recorte irregular das copas, com clareiras
+  function massaDeCopas(linha, seed, alturaMin, alturaMax, passoMin, passoMax, densidade) {
+    const r = aleatorio(seed);
+    const p = new Path2D();
+    let x = -220, h = alturaMin;
+    p.moveTo(x, linha(x));
+    while (x < MW + 220) {
+      // larguras muito diferentes, clareiras e, de vez em quando, um eucalipto a sobressair
+      const w = lerp(passoMin, passoMax, r() ** 1.6) * (r() < 0.12 ? 2.2 : 1);
+      const cheia = densidade(x) > r() * 0.9;
+      let hn = cheia ? lerp(alturaMin, alturaMax, r() ** 0.8) : r() * alturaMin * 0.25;
+      const xm = x + w / 2, xn = x + w;
+      if (cheia && r() < 0.07) {
+        const e = hn * 2.3, ew = Math.min(w, 5);
+        p.quadraticCurveTo(x + ew * 0.2, linha(x) - e * 0.6, x + ew * 0.5, linha(x) - e);
+        p.quadraticCurveTo(x + ew * 0.8, linha(x) - e * 0.6, x + ew, linha(x + ew) - hn * 0.6);
+      }
+      p.quadraticCurveTo(xm + (r() - 0.5) * w * 0.4, linha(xm) - Math.max(h, hn) * (1.15 + r() * 0.5), xn, linha(xn) - hn * (0.3 + r() * 0.3));
+      x = xn; h = hn;
+    }
+    p.lineTo(MW + 220, MH + 400); p.lineTo(-220, MH + 400); p.closePath();
+    return p;
+  }
+  // serra ao longe: perfil suave e um pelo de copas quase invisível
+  const pSerraLonge = massaDeCopas(serraLonge, 3, 1, 3, 5, 9, () => 0.7);
+  // cumeada com floresta: duas faixas de copas, mais densas nos vales (onde a cumeada desce)
+  const densCumeada = x => 0.55 + 0.4 * Math.sin(x * 0.004 + 1.3) + 0.25 * Math.sin(x * 0.011);
+  const pCumeada = massaDeCopas(cumeada, 11, 7, 15, 7, 14, densCumeada);
+  const linhaVale = x => cumeada(x) + 46 + 10 * Math.sin(x * 0.006);
+  const pCumeadaVale = massaDeCopas(linhaVale, 12, 6, 13, 8, 16, x => densCumeada(x) + 0.3);
+  const pColina = (() => {
+    const p = new Path2D();
+    p.moveTo(COLINA[0][0], COLINA[0][1]);
+    for (const [x, y] of COLINA) p.lineTo(x, y);
+    p.lineTo(1800, MH + 400); p.lineTo(-200, MH + 400); p.closePath();
+    return p;
+  })();
+  // carreiro de terra que desce da clareira para poente
+  const pCarreiro = (() => {
+    const p = new Path2D();
+    p.moveTo(992, CHAO + 4);
+    p.bezierCurveTo(932, 668, 902, 688, 842, 700);
+    p.bezierCurveTo(780, 712, 756, 734, 694, 748);
+    p.bezierCurveTo(630, 762, 590, 792, 500, 820);
+    p.lineTo(516, 828);
+    p.bezierCurveTo(612, 802, 654, 772, 708, 760);
+    p.bezierCurveTo(772, 744, 794, 722, 850, 708);
+    p.bezierCurveTo(904, 694, 936, 674, 995, CHAO + 4);
+    p.closePath();
+    return p;
+  })();
+  // manchas de mato na colina: quebram a cor lisa sem acrescentar formas
+  const rM = aleatorio(61);
+  const matos = Array.from({ length: 9 }, () => { const x = 200 + rM() * 1300; return { x, dy: 30 + rM() * 120, r: 50 + rM() * 70 }; }).filter(m => Math.abs(m.x - TORRE.x) > 170);
+  const pChaoFrente = (() => {
+    const p = new Path2D();
+    p.moveTo(-220, chaoFrente(-220));
+    for (let x = -220; x <= MW + 220; x += 8) p.lineTo(x, chaoFrente(x));
+    p.lineTo(MW + 220, MH + 400); p.lineTo(-220, MH + 400); p.closePath();
+    return p;
+  })();
+
+  // ---------- árvores desenhadas à mão (altura de referência ~200, base em 0,0) ----------
+  // A silhueta de cada copa é desenhada à mão, ponto a ponto; só a borda da folhagem
+  // ganha um recorte miúdo e irregular, para não parecer recortada a tesoura.
+  function copaOrganica(pts, seed, grao) {
+    const r = aleatorio(seed);
+    const cx = pts.reduce((s, q) => s + q[0], 0) / pts.length, cy = pts.reduce((s, q) => s + q[1], 0) / pts.length;
+    const p = new Path2D();
+    p.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 0; i < pts.length; i++) {
+      const a = pts[i], b = pts[(i + 1) % pts.length];
+      const n = Math.max(1, Math.round(Math.hypot(b[0] - a[0], b[1] - a[1]) / grao));
+      for (let k = 0; k < n; k++) {
+        const x0 = lerp(a[0], b[0], k / n), y0 = lerp(a[1], b[1], k / n);
+        const x1 = lerp(a[0], b[0], (k + 1) / n), y1 = lerp(a[1], b[1], (k + 1) / n);
+        const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+        const nx = mx - cx, ny = my - cy, nl = Math.hypot(nx, ny) || 1;
+        // a folhagem recorta-se para cima e para os lados; por baixo a copa é mais lisa
+        const bojo = grao * (0.35 + r() * 0.75) * (ny / nl > 0.45 ? 0.3 : 1);
+        p.quadraticCurveTo(mx + nx / nl * bojo, my + ny / nl * bojo, x1, y1);
+      }
+    }
+    p.closePath();
+    return p;
+  }
+  // tronco afilado e ligeiramente sinuoso, de (0,0) até (topoX, topoY)
+  function tronco(base, topo, topoX, topoY, curva = 0) {
+    const p = new Path2D();
+    p.moveTo(-base, 0);
+    p.bezierCurveTo(-base + curva, topoY * 0.35, topoX - topo + curva * 0.5, topoY * 0.7, topoX - topo, topoY);
+    p.lineTo(topoX + topo, topoY);
+    p.bezierCurveTo(topoX + topo + curva * 0.5, topoY * 0.7, base + curva, topoY * 0.35, base, 0);
+    p.closePath();
+    return p;
+  }
+  function ramo(x0, y0, x1, y1, g) {
+    const p = new Path2D();
+    const mx = (x0 + x1) / 2, my = (y0 + y1) / 2 + 6;
+    p.moveTo(x0 - g, y0); p.quadraticCurveTo(mx - g * 0.5, my, x1, y1); p.quadraticCurveTo(mx + g * 0.5, my - 2, x0 + g, y0); p.closePath();
+    return p;
+  }
+  // pequenas variações de um desenho: outra semente para a borda e um ligeiro desvio nos pontos
+  const variar = (pts, seed, d) => { const r = aleatorio(seed); return pts.map(([x, y]) => [x + (r() - 0.5) * d, y + (r() - 0.5) * d * 0.7]); };
+
+  const DESENHOS = {
+    // pinheiro-bravo: tronco alto e nu, copa em guarda-chuva irregular feita de várias massas
+    pinheiro: [
+      { troncos: () => [tronco(7, 3, 4, -156, -6), ramo(2, -132, -48, -160, 2.5), ramo(3, -140, 52, -164, 2.5), ramo(4, -150, 12, -182, 2)],
+        copas: [
+          [[-92, -160], [-82, -178], [-58, -190], [-30, -186], [-14, -172], [-30, -156], [-62, -150]],
+          [[-30, -186], [-10, -206], [20, -214], [50, -206], [62, -188], [40, -174], [6, -172]],
+          [[26, -168], [52, -184], [84, -182], [100, -166], [84, -150], [52, -150]],
+        ] },
+      { troncos: () => [tronco(6, 2.5, -6, -184, 8), ramo(-4, -166, -40, -186, 2), ramo(-5, -172, 34, -194, 2)],
+        copas: [
+          [[-64, -186], [-50, -204], [-22, -212], [-4, -200], [-14, -184], [-42, -178]],
+          [[-14, -200], [4, -222], [32, -224], [54, -210], [48, -192], [18, -186]],
+          [[-30, -176], [-8, -186], [18, -182], [24, -168], [0, -162], [-22, -164]],
+        ] },
+      { troncos: () => [tronco(7, 3, 26, -164, 4), ramo(22, -150, -14, -170, 2.2), ramo(24, -156, 64, -178, 2.2)],
+        copas: [
+          [[-36, -168], [-24, -186], [4, -192], [22, -180], [8, -164], [-18, -160]],
+          [[8, -186], [30, -204], [62, -202], [84, -188], [74, -172], [36, -170]],
+          [[56, -172], [80, -182], [104, -172], [102, -158], [78, -154]],
+        ] },
+    ],
+    // eucalipto: muito alto e esguio, copa estreita e pendente, com falhas
+    eucalipto: [
+      { troncos: () => [tronco(4, 1.6, 2, -250, -4), ramo(1, -200, -18, -214, 1.4), ramo(2, -186, 18, -200, 1.4)],
+        copas: [
+          [[-22, -254], [-6, -266], [12, -256], [20, -232], [10, -216], [-14, -218], [-26, -236]],
+          [[-30, -212], [-12, -218], [-4, -200], [-10, -180], [-28, -178], [-34, -196]],
+          [[4, -196], [22, -202], [30, -184], [22, -164], [6, -170]],
+        ] },
+      { troncos: () => [tronco(4, 1.5, -8, -240, 6), ramo(-6, -196, 14, -210, 1.4)],
+        copas: [
+          [[-28, -246], [-12, -258], [6, -248], [10, -226], [-4, -212], [-24, -216], [-34, -232]],
+          [[2, -214], [18, -218], [26, -198], [16, -182], [2, -188]],
+          [[-30, -196], [-16, -200], [-12, -184], [-20, -170], [-34, -176]],
+        ] },
+    ],
+    // sobreiro: tronco curto e grosso que abre em braços, copa larga, funda e arredondada
+    sobreiro: [
+      { troncos: () => [tronco(14, 10, -4, -62, 3), ramo(-8, -56, -46, -104, 9), ramo(-2, -58, 40, -108, 9), ramo(-5, -60, 6, -118, 7), ramo(-6, -60, -84, -100, 5), ramo(-2, -60, 78, -104, 5)],
+        copas: [
+          [[-118, -92], [-122, -122], [-98, -152], [-58, -170], [-12, -176], [36, -170], [80, -154], [112, -128], [116, -98], [92, -82], [46, -90], [0, -84], [-48, -90], [-92, -82]],
+          [[-150, -96], [-150, -120], [-126, -130], [-108, -112], [-118, -90]],
+          [[98, -110], [124, -132], [150, -124], [152, -100], [126, -92]],
+        ] },
+      { troncos: () => [tronco(13, 9, 4, -56, -3), ramo(2, -50, -40, -98, 8), ramo(6, -52, 46, -96, 8), ramo(4, -54, 2, -110, 6)],
+        copas: [
+          [[-104, -86], [-110, -114], [-86, -142], [-44, -160], [4, -164], [50, -156], [90, -134], [108, -106], [96, -80], [50, -86], [2, -80], [-48, -86], [-86, -78]],
+          [[-30, -158], [-6, -184], [30, -184], [50, -162], [10, -156]],
+        ] },
+    ],
+  };
+  // monta 3 ou 4 variantes de cada espécie a partir dos desenhos (outra borda, pontos ligeiramente desviados)
+  const ARVORES = {};
+  let semente = 500;
+  for (const [esp, lista] of Object.entries(DESENHOS)) {
+    ARVORES[esp] = [];
+    const total = esp === 'pinheiro' ? 4 : esp === 'eucalipto' ? 3 : 3;
+    for (let v = 0; v < total; v++) {
+      const d = lista[v % lista.length];
+      const desvio = v < lista.length ? 0 : 14;
+      ARVORES[esp].push({
+        troncoP: d.troncos(),
+        copaP: d.copas.map((pts, i) => copaOrganica(desvio ? variar(pts, semente + i, desvio) : pts, semente + i * 7, esp === 'sobreiro' ? 15 : esp === 'pinheiro' ? 10 : 8)),
+      });
+      semente += 31;
+    }
+  }
+
+  // manchas de árvores colocadas à mão: [espécie, variante, x, escala, rotação, espelhar]
+  const r0 = aleatorio(77);
+  const mancha1 = (esp, xs, base) => xs.map(([v, x, e, rot, esp2]) => ({ esp: esp2 || esp, v, x, e, rot, flip: r0() < 0.5, fase: r0() * 6, base }));
+  // primeiro plano: poucas árvores a emoldurar os lados, cortadas pelas margens
+  const FRENTE = [
+    ...mancha1('pinheiro', [[0, -30, 1.75, -0.04], [1, 95, 1.45, 0.02], [0, 230, 0.9, 0, 'sobreiro']], 'frente'),
+    ...mancha1('pinheiro', [[1, 1365, 0.95, 0, 'sobreiro'], [2, 1500, 1.5, 0.03], [3, 1630, 1.8, -0.02]], 'frente'),
+  ];
+  // colina: manchas de árvores encostadas umas às outras, com clareiras entre elas
+  const grupo = (x0, n, passo, escala, seed, especies) => {
+    const r = aleatorio(seed);
+    return Array.from({ length: n }, (_, i) => {
+      const esp = especies[(r() * especies.length) | 0];
+      return { esp, v: (r() * 4) | 0, x: x0 + i * passo + (r() - 0.5) * passo * 0.6, e: escala * (0.75 + r() * 0.45), rot: (r() - 0.5) * 0.06, flip: r() < 0.5, fase: r() * 6, base: 'colina' };
+    });
+  };
+  const COLINA_ARVORES = [
+    ...grupo(40, 7, 24, 0.46, 201, ['pinheiro', 'pinheiro', 'sobreiro']),
+    ...grupo(560, 9, 19, 0.4, 203, ['pinheiro', 'sobreiro', 'pinheiro', 'eucalipto']),
+    ...grupo(1240, 6, 21, 0.38, 204, ['pinheiro', 'sobreiro']),
+    ...grupo(1430, 5, 26, 0.44, 205, ['sobreiro', 'pinheiro', 'eucalipto']),
+  ].sort((a, b) => colinaY(a.x) - colinaY(b.x));
+
+  // ---------- céu ----------
   const rE = aleatorio(7);
-  const estrelas = Array.from({ length: 220 }, () => ({ x: rE() * MW, y: rE() * 560, r: 0.4 + rE() * 1.3, f: rE() * 6 }));
-  const rP = aleatorio(19);
-  const passaros = Array.from({ length: 7 }, (_, k) => ({ x0: rP() * MW, y: 170 + rP() * 160 + (k % 3) * 18, v: 0.025 + rP() * 0.02, f: rP() * 6, s: 0.8 + rP() * 0.5 }));
-  const nuvensVisiveis = [];
+  const estrelas = Array.from({ length: 220 }, () => ({ x: rE() * MW, y: rE() * 520, r: 0.4 + rE() * 1.3, f: rE() * 6 }));
+  // nuvens alongadas: base plana e mais escura, topo iluminado, bordas que se desfazem
+  function fazerNuvem(seed, comp) {
+    const r = aleatorio(seed);
+    const base = [], topo = [];
+    const n = Math.round(comp / 34);
+    for (let i = 0; i < n; i++) {
+      const u = i / (n - 1) - 0.5;
+      base.push({ x: u * comp + (r() - 0.5) * 14, y: (r() - 0.5) * 4, r: 34 + r() * 22, a: 0.85 });
+    }
+    const m = 3 + (r() * 3 | 0);
+    for (let i = 0; i < m; i++) {
+      const u = (i + 0.5) / m - 0.5;
+      const alto = 1 - Math.abs(u) * 1.6;
+      topo.push({ x: u * comp * 0.75 + (r() - 0.5) * 20, y: -16 - alto * (18 + r() * 16), r: 30 + alto * 24 + r() * 10, a: 0.9 });
+    }
+    return { base, topo };
+  }
   const nuvens = [
-    { x: 240, y: 170, s: 1.1, v: 0.012 }, { x: 820, y: 110, s: 0.8, v: 0.008 }, { x: 1320, y: 210, s: 1.3, v: 0.01 },
+    { x: 260, y: 160, v: 0.010, ...fazerNuvem(1, 300) },
+    { x: 930, y: 112, v: 0.007, ...fazerNuvem(2, 210) },
+    { x: 1360, y: 220, v: 0.009, ...fazerNuvem(3, 340) },
   ];
 
   // ---------- câmara ----------
@@ -199,75 +352,225 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
     const zMax = Math.max(W / (30 * base), H / (18 * base)) * 1.2;
     const e = suave(0.8, 0.985, p);
     const z = Math.exp(lerp(0, Math.log(zMax), e * e));
-    // a janela desliza da posição inicial no ecrã até ao centro enquanto a câmara se aproxima
     const s = base * z, resto = (1 - e) * base / s;
     return { s, fx: JANELA.x - (JANELA.x - cx) * resto, fy: JANELA.y - (JANELA.y - cy) * resto, z };
   }
 
-  // ---------- fogo: ignição, frente que avança com o vento e rasto ardido ----------
-  // O fogo nasce numa fogueira mal apagada no parque de merendas e espalha-se sobretudo
-  // para leste, para onde sopra o vento ("vento a rodar para leste", diz o diário).
+  // ---------- fogo ----------
+  // Nasce numa fogueira mal apagada no parque de merendas e espalha-se sobretudo para leste,
+  // com o vento. Do posto vê-se sobretudo o fumo e o clarão; as chamas mal aparecem entre as copas.
   const frente = f => ({ esq: FOGO.x - (6 + f * 70), dir: FOGO.x + (6 + f * 230) });
+  const N_FUMO = 30;
+  const rF = aleatorio(53);
+  const sopros = Array.from({ length: N_FUMO }, (_, i) => ({ fase: i / N_FUMO, lado: rF() - 0.5, f: rF() * 6 }));
   const rB = aleatorio(91);
-  const brasasChao = Array.from({ length: 160 }, () => ({ u: rB(), dy: rB() * 5, f: rB() * 6 }));
-  const particulas = [];
-  function atualizarFogo(intensidade, ignicao, dt, t) {
+  const faulhas = Array.from({ length: 26 }, () => ({ u: rB(), fase: rB(), v: 0.6 + rB() * 0.8 }));
+
+  // coluna de fumo: estreita na base, a alargar e a dobrar com o vento, densa e quente em baixo
+  function colunaDeFumo(p, t, intensidade, noite, fogo, brasa = 0) {
+    if (intensidade <= 0.01) return;
+    const { esq, dir } = frente(fogo);
+    const x0 = fogo > 0.02 ? lerp(esq, dir, 0.62) : FOGO.x;
+    const y0 = cumeada(x0) + 4;
+    const altura = lerp(150, 560, intensidade), vento = lerp(70, 300, intensidade);
+    const rBase = lerp(7, 26, intensidade), rTopo = lerp(36, 150, intensidade);
+    const cinzaDia = mistura(hex('#A9A6A2'), ceuBase(p), 0.45);
+    const cinzaNoite = hex('#3E3A47');
+    const cinza = mistura(cinzaDia, cinzaNoite, noite);
+    const quente = hex('#E58A45');
+    // de tarde, um fio claro e transparente; à noite, uma coluna densa
+    const aMax = lerp(0.12, 0.36, suave(0.1, 0.6, intensidade));
+    const vel = reduzir ? 0 : 0.000045 * (0.7 + intensidade);
+    // dos de trás para os da frente, para a base densa ficar por cima
+    const ordem = sopros.map(s => ({ s, q: (s.fase + t * vel) % 1 })).sort((a, b) => b.q - a.q);
+    for (const { s, q } of ordem) {
+      const x = x0 + vento * q ** 1.6 + s.lado * rBase * 1.2 + (reduzir ? 0 : Math.sin(t * 0.0005 + s.f) * 10 * q);
+      const y = y0 - altura * q;
+      const r = lerp(rBase, rTopo, q ** 0.8);
+      const a = aMax * suave(0, 0.1, q) * (1 - q) ** 1.25;
+      // em baixo, à noite, o fumo é iluminado a laranja pelas chamas
+      const luz = clamp(1 - q * 3.2, 0, 1) * Math.max(fogo, brasa) * (0.35 + 0.65 * noite);
+      mancha(x, y, r, mistura(cinza, quente, luz * 0.85), a);
+    }
+  }
+  function chamasEntreCopas(t, f, noite) {
+    if (f <= 0.02) return;
+    const { esq, dir } = frente(f);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    // clarão por trás das copas
+    const cx = (esq + dir) / 2, cy = cumeada(cx);
+    mancha(cx, cy, 120 + 260 * f, hex('#FF7A30'), 0.35 * f * (0.5 + 0.5 * noite), 0.55);
+    // línguas baixas ao longo da frente: só as pontas espreitam por cima das copas
+    const n = 54;
+    for (let i = 0; i < n; i++) {
+      const xx = lerp(esq, dir, i / (n - 1));
+      const y0 = cumeada(xx) + 2;
+      const forca = Math.min(1, Math.exp(-(dir - xx) / 26) + 0.6 * Math.exp(-(xx - esq) / 20) + 0.12);
+      const onda = reduzir ? 0.7 : 0.55 + 0.45 * Math.sin(t * 0.017 + i * 1.7) * Math.sin(t * 0.011 + i * 0.6);
+      const h = (12 + 26 * onda) * forca * (0.4 + 0.6 * f);
+      if (h < 2) continue;
+      const w = 3 + 2 * f;
+      const gg = ctx.createLinearGradient(0, y0, 0, y0 - h);
+      gg.addColorStop(0, 'rgba(255,90,30,0.85)'); gg.addColorStop(0.6, 'rgba(255,160,60,0.55)'); gg.addColorStop(1, 'rgba(255,220,140,0)');
+      ctx.fillStyle = gg;
+      const inc = h * 0.25;
+      ctx.beginPath(); ctx.moveTo(xx - w, y0);
+      ctx.quadraticCurveTo(xx - w * 0.3 + inc * 0.3, y0 - h * 0.6, xx + inc, y0 - h);
+      ctx.quadraticCurveTo(xx + w * 0.4 + inc * 0.4, y0 - h * 0.6, xx + w, y0);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+  function luzDoFogoNoTerreno(t, f, noite) {
+    if (f <= 0.02) return;
+    const { esq, dir } = frente(f);
+    const cx = (esq + dir) / 2, cy = cumeada(cx) + 30;
+    const tremor = reduzir ? 1 : 0.9 + 0.1 * Math.sin(t * 0.013) * Math.sin(t * 0.007);
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    mancha(cx, cy, 260 + 300 * f, hex('#C4461C'), 0.42 * f * tremor * (0.4 + 0.6 * noite), 0.6);
+    ctx.globalCompositeOperation = 'lighter';
+    // algumas faúlhas a subir por cima das copas
     if (!reduzir) {
-      // antes de pegar: só um fio de fumo a sair da fogueira
-      if (ignicao > 0.05 && intensidade < 0.05 && Math.random() < 0.3 * dt) {
-        particulas.push({
-          x: FOGO.x + (Math.random() - 0.5) * 4, y: cumeadas[1](FOGO.x) - 3,
-          vx: 0.04, vy: -(0.3 + Math.random() * 0.2), r: 1.4, v: 0, tipo: 'fumo', fino: true,
-        });
-      }
-      if (intensidade > 0.02) {
-        const { esq, dir } = frente(intensidade);
-        const n = intensidade * 3 * dt;
-        for (let i = 0; i < n || Math.random() < n - i; i++) {
-          // a maior parte do fumo nasce nas frentes, onde arde com mais força
-          const naFrente = Math.random() < 0.7;
-          const x = naFrente ? (Math.random() < 0.75 ? dir : esq) + (Math.random() - 0.5) * 30 : lerp(esq, dir, Math.random());
-          particulas.push({
-            x, y: cumeadas[1](x) - 4,
-            vx: 0.08 + Math.random() * 0.2, vy: -(0.7 + Math.random() * 0.7),
-            r: 4 + Math.random() * 6, v: 0, tipo: Math.random() < 0.2 ? 'brasa' : 'fumo',
-          });
-        }
+      for (const b of faulhas) {
+        const q = (b.fase + t * 0.00018 * b.v) % 1;
+        const x = lerp(esq, dir, b.u) + q * 60 + Math.sin(t * 0.004 + b.u * 20) * 4;
+        const y = cumeada(x) - 10 - q * 110;
+        ctx.fillStyle = `rgba(255,${170 + 60 * (1 - q) | 0},80,${0.8 * (1 - q) * f * noite})`;
+        ctx.fillRect(x, y, 1.6, 1.6);
       }
     }
-    for (let i = particulas.length - 1; i >= 0; i--) {
-      const q = particulas[i];
-      q.v += dt / (q.tipo === 'brasa' ? 120 : q.fino ? 260 : 480);
-      // o vento é mais forte lá em cima: a coluna de fumo dobra para leste
-      const vento = q.v * q.v * 2.2;
-      q.x += (q.vx + vento) * dt;
-      q.y += q.vy * dt * (q.tipo === 'brasa' ? 1.5 : 1) * (1 - q.v * 0.35);
-      q.r += (q.tipo === 'brasa' ? 0 : q.fino ? 0.04 : 0.16) * dt;
-      if (q.tipo === 'brasa') q.x += Math.sin(t * 0.01 + i) * 0.35;
-      if (q.v >= 1) particulas.splice(i, 1);
-    }
-    if (particulas.length > 700) particulas.splice(0, particulas.length - 700);
+    ctx.restore();
   }
 
-  // ---------- desenho ----------
+  // ---------- árvores ----------
+  // desenha uma árvore com luz de contorno do lado do sol (de dia) e um balanço muito leve
+  function arvore(a, x, y, t, cor, rim) {
+    const d = ARVORES[a.esp][a.v % ARVORES[a.esp].length];
+    ctx.save();
+    ctx.translate(x, y);
+    const balanco = reduzir ? 0 : (a.base === 'frente' ? 0.012 : 0.004) * Math.sin(t * 0.0009 + a.fase) * (rim ? rim.vento : 1);
+    ctx.rotate(a.rot + balanco);
+    ctx.scale(a.flip ? -a.e : a.e, a.e);
+    ctx.fillStyle = rgb(cor);
+    for (const p of d.troncoP) ctx.fill(p);
+    if (a.e < 0.6) { ctx.strokeStyle = rgb(cor); ctx.lineWidth = 1.4 / a.e; ctx.lineJoin = 'round'; for (const p of d.troncoP) ctx.stroke(p); }
+    if (!(rim && rim.a > 0.01)) for (const p of d.copaP) ctx.fill(p);
+    if (rim && rim.a > 0.01) {
+      // luz suave dentro da copa: mais clara em cima, do lado do sol, sem contornos nítidos
+      const l = (a.flip ? -1 : 1) * rim.lado;
+      const gr = ctx.createLinearGradient(l * 110, -240, -l * 30, -90);
+      gr.addColorStop(0, rgb(mistura(cor, rim.cor, rim.a)));
+      gr.addColorStop(0.55, rgb(mistura(cor, rim.cor, rim.a * 0.25)));
+      gr.addColorStop(1, rgb(cor));
+      ctx.fillStyle = gr;
+      for (const p of d.copaP) ctx.fill(p);
+    }
+    ctx.restore();
+  }
+
+  // ---------- torre, clareira e chão à volta ----------
+  const PERNA_TOPO = 34, PERNA_BASE = 64;
+  const rC = aleatorio(31);
+  const pedras = Array.from({ length: 9 }, () => ({ x: TORRE.x + (rC() - 0.5) * 200, r: 2.5 + rC() * 4.5 }));
+  const tufos = Array.from({ length: 26 }, () => ({ x: TORRE.x + (rC() - 0.5) * 230, h: 4 + rC() * 7, f: rC() * 6 }));
+  const arbustos = [[TORRE.x - 108, 1], [TORRE.x - 92, 0.7], [TORRE.x + 96, 0.85], [TORRE.x + 118, 1.1], [TORRE.x + 30, 0.55]];
+
+  function clareiraESombras(p, sx, sy, dia) {
+    const { x } = TORRE;
+    // terra batida: mancha alongada no topo plano da colina
+    const terra = rgb(corTerra(p));
+    ctx.fillStyle = terra;
+    ctx.beginPath();
+    ctx.moveTo(x - 120, CHAO + 3);
+    ctx.bezierCurveTo(x - 96, CHAO - 3, x - 40, CHAO - 4, x, CHAO - 4);
+    ctx.bezierCurveTo(x + 50, CHAO - 4, x + 100, CHAO - 3, x + 124, CHAO + 3);
+    ctx.bezierCurveTo(x + 80, CHAO + 9, x - 70, CHAO + 9, x - 120, CHAO + 3);
+    ctx.fill();
+    // sombra projetada no chão, do lado oposto ao sol: mais comprida com o sol baixo
+    if (dia > 0.02) {
+      const lado = sx < x ? 1 : -1;
+      const comp = clamp((sy - 120) * 0.55, 30, 260);
+      ctx.save();
+      if ('filter' in ctx) ctx.filter = 'blur(3px)';
+      ctx.fillStyle = `rgba(20,30,20,${0.22 * dia})`;
+      ctx.beginPath();
+      ctx.moveTo(x - PERNA_BASE, CHAO); ctx.lineTo(x + PERNA_BASE, CHAO);
+      ctx.lineTo(x + lado * comp + 26, CHAO + 9); ctx.lineTo(x + lado * comp - 26, CHAO + 9);
+      ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+    // sombra de contacto, sempre presente
+    mancha(x, CHAO + 1, 96, hex('#1A160F'), 0.35, 0.09);
+  }
+
+  function chaoDaTorre(p, t, cor) {
+    const { x } = TORRE;
+    // sapatas de betão, meio enterradas, uma por perna (vistas de frente: duas)
+    for (const sx of [x - PERNA_BASE, x + PERNA_BASE]) {
+      ctx.fillStyle = rgb(corBetao(p));
+      ctx.beginPath();
+      ctx.moveTo(sx - 10, CHAO + 3); ctx.lineTo(sx - 8, CHAO - 9); ctx.lineTo(sx + 8, CHAO - 9); ctx.lineTo(sx + 10, CHAO + 3); ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.18)';
+      ctx.fillRect(sx + 2, CHAO - 9, 6, 12);
+      // lábio de terra que enterra a sapata
+      ctx.fillStyle = rgb(corTerra(p));
+      ctx.beginPath(); ctx.ellipse(sx, CHAO + 3, 15, 3.4, 0, 0, Math.PI * 2); ctx.fill();
+    }
+    // pedras
+    for (const s of pedras) {
+      ctx.fillStyle = rgb(mistura(corBetao(p), cor, 0.35));
+      ctx.beginPath(); ctx.ellipse(s.x, CHAO + 2, s.r, s.r * 0.6, 0, Math.PI, 0); ctx.fill();
+    }
+    // arbustos baixos e tufos de erva
+    for (const [ax, e] of arbustos) {
+      ctx.fillStyle = rgb(mistura(cor, [0, 0, 0], 0.15));
+      ctx.beginPath();
+      ctx.moveTo(ax - 16 * e, CHAO + 3);
+      ctx.bezierCurveTo(ax - 18 * e, CHAO - 8 * e, ax - 8 * e, CHAO - 14 * e, ax, CHAO - 12 * e);
+      ctx.bezierCurveTo(ax + 8 * e, CHAO - 16 * e, ax + 18 * e, CHAO - 8 * e, ax + 16 * e, CHAO + 3);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.strokeStyle = rgb(mistura(cor, [0, 0, 0], 0.1));
+    ctx.lineWidth = 1.2; ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (const g of tufos) {
+      const b = reduzir ? 0 : Math.sin(t * 0.002 + g.f) * 1.2;
+      ctx.moveTo(g.x - 2, CHAO + 3); ctx.quadraticCurveTo(g.x - 3, CHAO - g.h * 0.5, g.x - 4 + b, CHAO - g.h);
+      ctx.moveTo(g.x, CHAO + 3); ctx.quadraticCurveTo(g.x, CHAO - g.h * 0.6, g.x + 1 + b, CHAO - g.h * 1.15);
+      ctx.moveTo(g.x + 2, CHAO + 3); ctx.quadraticCurveTo(g.x + 3, CHAO - g.h * 0.5, g.x + 5 + b, CHAO - g.h * 0.9);
+    }
+    ctx.stroke();
+  }
+
   function desenharTorre(p, t) {
     const { x, cabY, cabH, cabW } = TORRE;
     const baixo = cabY + cabH;
+    const fim = CHAO - 8;                       // as pernas entram no topo das sapatas
     const metal = rgb(corMetal(p));
-    ctx.strokeStyle = metal; ctx.lineCap = 'round';
+    const metalClaro = rgb(corMetalClaro(p));
+    const meia = y => lerp(PERNA_TOPO, PERNA_BASE, (y - baixo) / (fim - baixo));
+    ctx.lineCap = 'round';
 
-    // pernas e contraventamentos
-    const niveis = 6;
-    const meia = y => lerp(34, 64, (y - baixo) / (BASE_TORRE - baixo));
-    ctx.lineWidth = 5;
+    // pernas: face de sombra e face de luz
+    ctx.strokeStyle = metal; ctx.lineWidth = 5;
     ctx.beginPath();
-    ctx.moveTo(x - 34, baixo); ctx.lineTo(x - 64, BASE_TORRE);
-    ctx.moveTo(x + 34, baixo); ctx.lineTo(x + 64, BASE_TORRE);
+    ctx.moveTo(x - PERNA_TOPO, baixo); ctx.lineTo(x - PERNA_BASE, fim);
+    ctx.moveTo(x + PERNA_TOPO, baixo); ctx.lineTo(x + PERNA_BASE, fim);
     ctx.stroke();
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = metalClaro; ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(x - PERNA_TOPO - 1.5, baixo); ctx.lineTo(x - PERNA_BASE - 1.5, fim);
+    ctx.moveTo(x + PERNA_TOPO - 1.5, baixo); ctx.lineTo(x + PERNA_BASE - 1.5, fim);
+    ctx.stroke();
+    // contraventamentos em X e travessas
+    const niveis = 6;
+    ctx.strokeStyle = metal; ctx.lineWidth = 2;
     ctx.beginPath();
     for (let i = 0; i < niveis; i++) {
-      const y1 = lerp(baixo, BASE_TORRE, i / niveis), y2 = lerp(baixo, BASE_TORRE, (i + 1) / niveis);
+      const y1 = lerp(baixo, fim, i / niveis), y2 = lerp(baixo, fim, (i + 1) / niveis);
       ctx.moveTo(x - meia(y1), y1); ctx.lineTo(x + meia(y2), y2);
       ctx.moveTo(x + meia(y1), y1); ctx.lineTo(x - meia(y2), y2);
       ctx.moveTo(x - meia(y2), y2); ctx.lineTo(x + meia(y2), y2);
@@ -276,25 +579,25 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
     // rebites nas juntas
     ctx.fillStyle = rgb(mistura(corMetal(p), hex('#F3D9B0'), 0.35 * (1 - suave(0.55, 0.7, p))));
     for (let i = 0; i <= niveis; i++) {
-      const yy = lerp(baixo, BASE_TORRE, i / niveis), m = meia(yy);
+      const yy = lerp(baixo, fim, i / niveis), m = meia(yy);
       for (const xx of [x - m, x + m]) { ctx.beginPath(); ctx.arc(xx, yy, 1.7, 0, Math.PI * 2); ctx.fill(); }
     }
-    // escadas em ziguezague
-    ctx.lineWidth = 1.4;
-    ctx.globalAlpha = 0.8;
+    // escada de mão, do varandim até ao chão
+    const e1 = x + 12, e2 = x + 22;
+    ctx.strokeStyle = metalClaro; ctx.lineWidth = 1.3;
     ctx.beginPath();
-    for (let i = 0; i < niveis; i++) {
-      const y1 = lerp(baixo, BASE_TORRE, i / niveis), y2 = lerp(baixo, BASE_TORRE, (i + 1) / niveis);
-      const a = i % 2 ? -1 : 1;
-      ctx.moveTo(x - a * 18, y1 + 3); ctx.lineTo(x + a * 18, y2 - 1);
+    ctx.moveTo(e1, baixo + 4); ctx.lineTo(e1 + 4, CHAO - 1);
+    ctx.moveTo(e2, baixo + 4); ctx.lineTo(e2 + 4, CHAO - 1);
+    for (let yy = baixo + 12; yy < CHAO - 4; yy += 11) {
+      const q = (yy - baixo) / (CHAO - baixo);
+      ctx.moveTo(e1 + 4 * q, yy); ctx.lineTo(e2 + 4 * q, yy);
     }
     ctx.stroke();
-    ctx.globalAlpha = 1;
 
     // varandim
     ctx.fillStyle = metal;
     ctx.fillRect(x - cabW / 2 - 16, baixo, cabW + 32, 5);
-    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = metal; ctx.lineWidth = 1.6;
     ctx.beginPath();
     ctx.moveTo(x - cabW / 2 - 16, baixo - 16); ctx.lineTo(x + cabW / 2 + 16, baixo - 16);
     for (let i = 0; i <= 12; i++) { const xx = x - cabW / 2 - 16 + i * (cabW + 32) / 12; ctx.moveTo(xx, baixo - 16); ctx.lineTo(xx, baixo); }
@@ -303,6 +606,8 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
     // cabine
     ctx.fillStyle = rgb(corParede(p));
     ctx.fillRect(x - cabW / 2, cabY, cabW, cabH);
+    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    ctx.fillRect(x + cabW / 2 - 14, cabY, 14, cabH);
 
     // janelas: reflexo de dia, candeeiro aceso à noite
     const aceso = suave(0.56, 0.66, p);
@@ -320,10 +625,8 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
       }
     }
     // o vigia, de binóculos apontados para noroeste
-    // o vigia está sempre no posto; de dia vê-se em contraluz, à noite recortado pelo candeeiro
-    const vigia = 0.75 + 0.25 * suave(0.6, 0.68, p);
-    if (vigia > 0) {
-      ctx.fillStyle = rgb(hex('#2A1C14'), vigia);
+    {
+      ctx.fillStyle = rgb(hex('#2A1C14'), 0.8 + 0.2 * aceso);
       const vx = x + 2, vy = jy + jh;
       ctx.beginPath();
       ctx.moveTo(vx - 13, vy); ctx.quadraticCurveTo(vx - 12, vy - 17, vx, vy - 18); ctx.quadraticCurveTo(vx + 12, vy - 17, vx + 13, vy); ctx.closePath();
@@ -333,36 +636,31 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
       ctx.fillRect(vx - 7, vy - 22, 5, 8);
     }
     // reflexo do céu no vidro, que desaparece quando o candeeiro acende
-    const brilhoVidro = 0.32 * (1 - aceso);
+    const brilhoVidro = 0.3 * (1 - aceso);
     if (brilhoVidro > 0.01) {
       for (const [a, b] of panos) {
         ctx.save();
         ctx.beginPath(); ctx.rect(x + a, jy, b - a, jh); ctx.clip();
         const gv = ctx.createLinearGradient(x + a, jy, x + b, jy + jh);
-        gv.addColorStop(0, `rgba(255,255,255,${brilhoVidro * 0.2})`);
-        gv.addColorStop(0.42, `rgba(255,255,255,${brilhoVidro * 0.2})`);
-        gv.addColorStop(0.48, `rgba(255,255,255,${brilhoVidro})`);
-        gv.addColorStop(0.58, `rgba(255,255,255,${brilhoVidro * 0.15})`);
+        gv.addColorStop(0, `rgba(255,255,255,${brilhoVidro * 0.15})`);
+        gv.addColorStop(0.45, `rgba(255,255,255,${brilhoVidro * 0.15})`);
+        gv.addColorStop(0.5, `rgba(255,255,255,${brilhoVidro})`);
+        gv.addColorStop(0.6, `rgba(255,255,255,${brilhoVidro * 0.1})`);
         gv.addColorStop(1, 'rgba(255,255,255,0)');
         ctx.fillStyle = gv; ctx.fillRect(x + a, jy, b - a, jh);
         ctx.restore();
       }
     }
     // caixilhos
-    ctx.fillStyle = rgb(corParede(p));
     ctx.fillStyle = metal;
-    for (const [a, b] of panos) {
-      ctx.fillRect(x + a - 1, jy + jh / 2 - 0.8, b - a + 2, 1.6);
-    }
+    for (const [a, b] of panos) ctx.fillRect(x + a - 1, jy + jh / 2 - 0.8, b - a + 2, 1.6);
     ctx.strokeStyle = metal; ctx.lineWidth = 2.2;
     for (const [a, b] of panos) ctx.strokeRect(x + a, jy, b - a, jh);
     // luz derramada pelo vidro à noite
     if (aceso > 0) {
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
-      const g = ctx.createRadialGradient(x, jy + jh / 2, 10, x, jy + jh / 2, 140);
-      g.addColorStop(0, rgb(hex('#F6B650'), 0.28 * aceso)); g.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = g; ctx.fillRect(x - 160, jy - 130, 320, 300);
+      mancha(x, jy + jh / 2, 150, hex('#F6B650'), 0.3 * aceso);
       ctx.restore();
     }
 
@@ -371,6 +669,8 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
     ctx.beginPath();
     ctx.moveTo(x - cabW / 2 - 12, cabY + 2); ctx.lineTo(x - 18, cabY - 32); ctx.lineTo(x + 18, cabY - 32); ctx.lineTo(x + cabW / 2 + 12, cabY + 2);
     ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.16)';
+    ctx.beginPath(); ctx.moveTo(x + 18, cabY - 32); ctx.lineTo(x + cabW / 2 + 12, cabY + 2); ctx.lineTo(x + 30, cabY + 2); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = metal; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(x, cabY - 32); ctx.lineTo(x, cabY - 88); ctx.moveTo(x - 9, cabY - 72); ctx.lineTo(x + 9, cabY - 72); ctx.stroke();
     // manga de vento: aponta para leste e enche-se mais quando o vento aperta à tarde
@@ -401,243 +701,57 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
     }
   }
 
-  function desenharFogo(intensidade, ignicao, t) {
-    const yR = cumeadas[1](FOGO.x);
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    // a fogueira: uma brasa a piscar no parque de merendas, antes de o fogo pegar
-    if (ignicao > 0 && intensidade < 0.6) {
-      const a = ignicao * (1 - suave(0.2, 0.6, intensidade)) * (reduzir ? 1 : 0.7 + 0.3 * Math.sin(t * 0.02));
-      const g0 = ctx.createRadialGradient(FOGO.x, yR - 2, 0, FOGO.x, yR - 2, 26);
-      g0.addColorStop(0, rgb(hex('#FFD07A'), 0.9 * a));
-      g0.addColorStop(0.3, rgb(hex('#FF7A2A'), 0.5 * a));
-      g0.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = g0;
-      ctx.fillRect(FOGO.x - 30, yR - 30, 60, 60);
-    }
-    if (intensidade <= 0) { ctx.restore(); return; }
-    const { esq, dir } = frente(intensidade);
-    const centro = (esq + dir) / 2;
-
-    // rasto ardido: atrás da frente a encosta fica negra, com brasas a piscar
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.beginPath();
-    ctx.moveTo(esq, cumeadas[1](esq));
-    for (let x = esq; x <= dir; x += 6) ctx.lineTo(x, cumeadas[1](x) - 1);
-    for (let x = dir; x >= esq; x -= 6) ctx.lineTo(x, cumeadas[1](x) + 11 + 4 * Math.sin(x * 0.07));
-    ctx.closePath();
-    ctx.fillStyle = `rgba(20,12,10,${0.85 * Math.min(1, intensidade * 4)})`;
-    ctx.fill();
-    ctx.globalCompositeOperation = 'lighter';
-    for (const b of brasasChao) {
-      const x = lerp(esq, dir, b.u);
-      const brilho = reduzir ? 0.6 : 0.4 + 0.6 * Math.max(0, Math.sin(t * 0.006 + b.f * 7));
-      ctx.fillStyle = `rgba(255,${110 + 60 * brilho | 0},40,${0.55 * brilho * intensidade})`;
-      ctx.fillRect(x, cumeadas[1](x) + 1 + b.dy, 1.6, 1.6);
-    }
-
-    // clarão no céu, a acompanhar a frente
-    const g = ctx.createRadialGradient(centro, yR, 5, centro, yR, 420 * (0.5 + intensidade));
-    g.addColorStop(0, rgb(hex('#FF8A3A'), 0.55 * intensidade));
-    g.addColorStop(0.35, rgb(hex('#D9481C'), 0.22 * intensidade));
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = g;
-    ctx.fillRect(centro - 800, yR - 650, 1600, 1000);
-
-    // línguas de fogo em duas camadas: altas nas frentes, baixas no interior que já ardeu,
-    // todas inclinadas pelo vento
-    const n = 72;
-    for (let camada = 0; camada < 2; camada++) {
-      for (let i = 0; i < n; i++) {
-        const xx = lerp(esq, dir, i / (n - 1));
-        const y0 = cumeadas[1](xx) + 3;
-        const forca = Math.min(1, Math.exp(-(dir - xx) / 24) + 0.6 * Math.exp(-(xx - esq) / 18) + 0.16);
-        const onda = reduzir ? 0.7 : 0.55 + 0.45 * Math.sin(t * 0.017 + i * 1.7 + camada) * Math.sin(t * 0.011 + i * 0.6);
-        const h = (camada ? 0.55 : 1) * (10 + 34 * onda) * forca * (0.4 + 0.6 * intensidade);
-        if (h < 1.5) continue;
-        const w = (camada ? 2 : 3.4) + 2 * intensidade;
-        const inclina = h * 0.28 + Math.sin(t * 0.02 + i) * 2;
-        const gg = ctx.createLinearGradient(0, y0, 0, y0 - h);
-        if (camada === 0) {
-          gg.addColorStop(0, 'rgba(255,80,25,0.95)'); gg.addColorStop(0.55, 'rgba(255,150,50,0.8)'); gg.addColorStop(1, 'rgba(255,210,120,0)');
-        } else {
-          gg.addColorStop(0, 'rgba(255,230,140,0.9)'); gg.addColorStop(1, 'rgba(255,250,210,0)');
-        }
-        ctx.fillStyle = gg;
-        ctx.beginPath();
-        ctx.moveTo(xx - w, y0);
-        ctx.quadraticCurveTo(xx - w * 0.4 + inclina * 0.3, y0 - h * 0.6, xx + inclina, y0 - h);
-        ctx.quadraticCurveTo(xx + w * 0.4 + inclina * 0.4, y0 - h * 0.6, xx + w, y0);
-        ctx.fill();
-      }
-    }
-    ctx.restore();
+  // ---------- nuvens e névoa ----------
+  function desenharNuvem(n, x, p, tintaFogo) {
+    const noite = suave(0.55, 0.72, p);
+    const a = lerp(0.95, 0.5, noite);
+    let luz = corNuvemLuz(p), sombra = corNuvemSombra(p);
+    if (tintaFogo > 0) { luz = mistura(luz, hex('#E07040'), tintaFogo); sombra = mistura(sombra, hex('#7A3A40'), tintaFogo * 0.7); }
+    // base plana e mais escura
+    for (const b of n.base) mancha(x + b.x, n.y + b.y, b.r, sombra, b.a * a, 0.42);
+    // topo iluminado, ligeiramente acima
+    for (const c of n.topo) mancha(x + c.x, n.y + c.y, c.r, luz, c.a * a, 0.62);
   }
-
-  // as nuvens perto do fogo ficam tingidas pelo clarão
-  function tingirNuvens(intensidade) {
-    if (intensidade <= 0) return;
-    const { esq, dir } = frente(intensidade);
-    const centro = (esq + dir) / 2;
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    for (const n of nuvensVisiveis) {
-      const d = Math.hypot(n.x - centro, n.y - cumeadas[1](centro));
-      const a = 0.45 * intensidade * Math.exp(-d / 650);
-      if (a < 0.01) continue;
-      ctx.fillStyle = `rgba(230,100,40,${a})`;
-      nuvem(n.x, n.y, n.s);
-    }
-    ctx.restore();
-  }
-
-  function desenharParticulas(noite) {
-    for (const q of particulas) {
-      const vida = 1 - q.v;
-      if (q.tipo === 'brasa') {
-        ctx.fillStyle = `rgba(255,${150 + 80 * vida | 0},60,${vida * 0.9})`;
-        ctx.fillRect(q.x, q.y, 1.6, 1.6);
-      } else {
-        const quente = clamp(1 - q.v * 3.2, 0, 1);
-        const base = mistura(hex('#7C7880'), hex('#3B3845'), noite);
-        const c = mistura(base, hex('#E07A3C'), quente * 0.7 * noite + quente * 0.2);
-        ctx.fillStyle = rgb(c, (q.fino ? 0.35 : 0.22) * vida * Math.min(1, q.v * 12));
-        ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, Math.PI * 2); ctx.fill();
-      }
-    }
-  }
-
-  function nuvem(x, y, s) {
-    ctx.beginPath();
-    for (const [dx, dy, r] of [[0, 0, 34], [40, -14, 42], [86, 0, 32], [44, 10, 36], [-30, 8, 24]]) {
-      ctx.moveTo(x + dx * s + r * s, y + dy * s); ctx.arc(x + dx * s, y + dy * s, r * s, 0, Math.PI * 2);
-    }
-    ctx.fill();
-  }
-
-  // ---------- ambiente: luz, névoa, vento, pássaros, ar quente ----------
-  // névoa nos vales: mais densa de manhã, quase nenhuma a meio do dia
-  function forcaNevoa(p) { return lerp(0.5, 0.12, suave(0.02, 0.22, p)) + 0.12 * suave(0.42, 0.55, p) - 0.14 * suave(0.6, 0.75, p); }
-  function nevoaVale(i, p, cor) {
-    const y = BASES[i + 1] ?? MH;
-    const a = forcaNevoa(p) * (i === 0 ? 1 : i === 1 ? 0.85 : 0.6);
+  function nevoaDoVale(y, alto, cor, a, sx, corSol, dia) {
     if (a <= 0.01) return;
-    const g = ctx.createLinearGradient(0, y - 90, 0, y + 30);
-    g.addColorStop(0, rgb(cor, 0)); g.addColorStop(0.75, rgb(cor, a)); g.addColorStop(1, rgb(cor, a * 0.6));
-    ctx.fillStyle = g; ctx.fillRect(-200, y - 90, MW + 400, 160);
-  }
-  // luz rasante nas cumeadas: fria ao amanhecer, dourada ao fim da tarde
-  const corRasante = rampa([[0, '#DDEBFF'], [0.2, '#FFF6E0'], [0.42, '#FFE2A0'], [0.52, '#FFB067'], [0.6, '#C9707A'], [0.7, '#000000']]);
-  function forcaRasante(p) { return 0.28 * (1 - suave(0.05, 0.2, p)) + 0.1 + 0.32 * suave(0.36, 0.48, p) * (1 - suave(0.54, 0.62, p)) - 0.1 * suave(0.58, 0.66, p); }
-  // raios de sol: fortes ao amanhecer e ao fim da tarde, discretos a meio do dia
-  function raios(p, t, sx, sy) {
-    const acima = suave(500, 400, sy);                      // o sol tem de estar acima das cumeadas
-    const a = acima * (0.012 + 0.05 * (1 - suave(0.1, 0.2, p)) + 0.07 * suave(0.38, 0.46, p) * (1 - suave(0.51, 0.56, p)));
-    if (a <= 0.004 || p > 0.56) return;
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    const c = corRasante(p);
-    const rot = reduzir ? 0 : t * 0.000015;
-    for (let k = 0; k < 14; k++) {
-      const ang = Math.PI * (0.08 + k * 0.06) + Math.sin(rot * 3 + k * 2.1) * 0.03;
-      const larg = 0.01 + ((k * 7) % 5) * 0.006;
-      const comp = 900 + ((k * 13) % 7) * 90;
-      const g = ctx.createLinearGradient(sx, sy, sx + Math.cos(ang) * comp, sy + Math.sin(ang) * comp);
-      const forca = a * (0.5 + 0.5 * Math.sin(k * 1.9 + rot * 20));
-      g.addColorStop(0, rgb(c, forca)); g.addColorStop(0.5, rgb(c, forca * 0.5)); g.addColorStop(1, rgb(c, 0));
-      ctx.fillStyle = g;
-      ctx.beginPath(); ctx.moveTo(sx, sy);
-      ctx.lineTo(sx + Math.cos(ang - larg) * comp, sy + Math.sin(ang - larg) * comp);
-      ctx.lineTo(sx + Math.cos(ang + larg) * comp, sy + Math.sin(ang + larg) * comp);
-      ctx.closePath(); ctx.fill();
-    }
-    ctx.restore();
-  }
-  function desenharPassaros(p, t) {
-    const a = 1 - suave(0.45, 0.56, p);
-    if (a <= 0) return;
-    ctx.save();
-    ctx.strokeStyle = `rgba(32,36,44,${0.65 * a})`; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    for (const b of passaros) {
-      const x = ((b.x0 + t * b.v * (reduzir ? 0 : 1)) % (MW + 200)) - 100;
-      const y = b.y + Math.sin(t * 0.0011 + b.f) * 10;
-      const asa = reduzir ? 0.5 : Math.sin(t * 0.013 + b.f * 3);
-      const w = 7 * b.s;
-      ctx.lineWidth = 1.5 * b.s;
-      ctx.beginPath();
-      ctx.moveTo(x - w, y - 3 * asa * b.s); ctx.quadraticCurveTo(x - w * 0.4, y - 4 * b.s, x, y);
-      ctx.quadraticCurveTo(x + w * 0.4, y - 4 * b.s, x + w, y - 3 * asa * b.s);
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-  // ar seco e quente: depois do meio-dia a humidade cai e o horizonte tremula
-  const calorDoDia = p => suave(0.2, 0.4, p) * (1 - suave(0.5, 0.6, p));
-  // coluna de fumo distante, quando o perigo já é elevado (antes do incêndio da noite)
-  function fumoDistante(p, t) {
-    const a = suave(0.36, 0.46, p) * (1 - suave(0.6, 0.68, p));
-    if (a <= 0.01) return;
-    const x0 = 1480, y0 = cumeadas[0](x0) + 6;
-    const cinza = mistura(hex('#9C9AA0'), ceuBase(p), 0.35);
-    for (let k = 0; k < 18; k++) {
-      const q = k / 17;
-      const px = x0 + q * q * 190 + (reduzir ? 0 : Math.sin(t * 0.0008 + k * 0.9) * 5 * q);
-      const py = y0 - q * 280;
-      ctx.fillStyle = rgb(cinza, a * 0.26 * (1 - q * 0.75));
-      ctx.beginPath(); ctx.arc(px, py, 5 + q * 36, 0, Math.PI * 2); ctx.fill();
+    const g = ctx.createLinearGradient(0, y - alto, 0, y + alto * 0.3);
+    g.addColorStop(0, rgb(cor, 0)); g.addColorStop(0.7, rgb(cor, a)); g.addColorStop(1, rgb(cor, a * 0.5));
+    ctx.fillStyle = g; ctx.fillRect(-220, y - alto, MW + 440, alto * 1.3);
+    // do lado do sol, a névoa fica mais clara
+    if (dia > 0.02) {
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      mancha(sx, y - alto * 0.25, 520, corSol, 0.16 * dia * a / 0.4, 0.22);
+      ctx.restore();
     }
   }
-  // desenha uma camada (terreno + árvores), com balanço do vento e, se houver calor, a tremular
-  function preencherCamada(i, p, t, cor) {
-    const c = camadasDesenho[i];
-    const vento = 0.6 + 0.9 * suave(0.3, 0.6, p);
-    const amp = [0, 0, 0.002, 0.006, 0.013][i] * vento;
-    const calor = i <= 1 && !reduzir ? calorDoDia(p) : 0;
-    const desenhar1 = () => {
-      ctx.fillStyle = rgb(cor);
-      ctx.fill(c.terreno);
-      for (const g of c.grupos) {
-        ctx.fillStyle = rgb(mistura(cor, g.tom > 0 ? [255, 255, 255] : [0, 0, 0], Math.abs(g.tom)));
-        const k = reduzir ? 0 : amp * Math.sin(t * 0.0011 + g.x0 * 0.013) + amp * 0.5 * Math.sin(t * 0.0029 + g.x0 * 0.031);
-        if (k) { ctx.save(); ctx.transform(1, 0, k, 1, -k * g.base, 0); ctx.fill(g.p); ctx.restore(); } else ctx.fill(g.p);
-      }
-    };
-    if (calor > 0.05) {
-      // em tiras verticais com pequenos desvios: o ar quente faz tremer o horizonte
-      const tiras = 14, larg = (MW + 400) / tiras;
-      for (let k = 0; k < tiras; k++) {
-        ctx.save();
-        ctx.beginPath(); ctx.rect(-200 + k * larg, 0, larg + 1, MH + 400); ctx.clip();
-        ctx.translate(0, Math.sin(t * 0.006 + k * 1.3) * 1.3 * calor);
-        desenhar1();
-        ctx.restore();
-      }
-    } else desenhar1();
-  }
+  const forcaNevoa = p => lerp(0.55, 0.16, suave(0.02, 0.24, p)) + 0.14 * suave(0.42, 0.55, p) - 0.18 * suave(0.6, 0.75, p);
 
-  function desenhar(p, t, dt) {
+  // ---------- desenho ----------
+  function desenhar(p, t) {
     const cam = camara(p);
     const noite = suave(0.55, 0.72, p);
+    const dia = 1 - suave(0.5, 0.64, p);
     const ignicao = suave(0.57, 0.63, p);
     const fogo = suave(0.63, 0.78, p);
-    atualizarFogo(fogo, ignicao, dt, t);
+    // fumo: de tarde já se vê uma coluna fina; à noite cresce com o fogo
+    const fumo = Math.max(0.12 * suave(0.38, 0.5, p) * (1 - suave(0.56, 0.62, p)) + 0.18 * ignicao, fogo);
+    const vento = 0.6 + 0.9 * suave(0.3, 0.6, p);
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // céu, preso ao ecrã para não perder o gradiente com o zoom
     const g = ctx.createLinearGradient(0, 0, 0, H);
-    g.addColorStop(0, rgb(ceuTopo(p))); g.addColorStop(0.75, rgb(ceuBase(p)));
+    g.addColorStop(0, rgb(ceuTopo(p))); g.addColorStop(0.78, rgb(ceuBase(p)));
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
 
     ctx.setTransform(dpr * cam.s, 0, 0, dpr * cam.s, dpr * (W / 2 - cam.fx * cam.s), dpr * (H / 2 - cam.fy * cam.s));
 
-    // parallax: a câmara sobe pela torre; o longe mexe-se menos do que o perto (a torre é a referência)
+    // parallax: a câmara sobe pela torre; o longe mexe-se menos (a colina da torre é a referência)
     const u = suave(0.02, 0.8, p);
-    const dy = [-26, -16, -8, 0, 60].map(v => v * u);
-    const dyCeu = -36 * u;
+    const dyCeu = -36 * u, dyLonge = -24 * u, dyCumeada = -14 * u, dyFrente = 60 * u;
 
+    // --- céu ---
     ctx.save();
     ctx.translate(0, dyCeu);
-    // estrelas
     if (noite > 0) {
       for (const e of estrelas) {
         const a = noite * (reduzir ? 0.8 : 0.55 + 0.45 * Math.sin(t * 0.002 + e.f * 3));
@@ -645,86 +759,121 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
         ctx.fillRect(e.x, e.y, e.r, e.r);
       }
     }
-    // sol a atravessar o céu, põe-se atrás da serra
+    // sol: disco com um halo largo e macio, sem raios
     const s = clamp(p / 0.56, 0, 1);
-    const sx = 170 + s * 1250, sy = 560 - Math.sin(s * Math.PI) * 420 + s * s * 40;
+    const sx = 120 + s * 1420, sy = 560 - Math.sin(s * Math.PI) * 420 + s * s * 40;
+    const corSol = corSolDe(s);
     if (s < 1) {
-      const corSol = rampa([[0, '#FFE9C2'], [0.15, '#FFF3C8'], [0.6, '#FFF1C4'], [0.85, '#FFC46B'], [1, '#FF8A4A']])(s);
-      const halo = ctx.createRadialGradient(sx, sy, 10, sx, sy, 260);
-      halo.addColorStop(0, rgb(corSol, 0.6)); halo.addColorStop(0.3, rgb(corSol, 0.18)); halo.addColorStop(1, rgb(corSol, 0));
-      ctx.fillStyle = halo; ctx.fillRect(sx - 270, sy - 270, 540, 540);
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      // de manhã cedo o sol ainda está por trás da serra: só um clarão contido
+      const nascer = 0.6 + 0.4 * suave(0.06, 0.16, p);
+      mancha(sx, sy, 420, corSol, 0.2 * dia * nascer);
+      mancha(sx, sy, 140, corSol, 0.32 * dia * nascer);
+      ctx.restore();
       ctx.fillStyle = rgb(corSol);
-      ctx.beginPath(); ctx.arc(sx, sy, 30, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(sx, sy, 28, 0, Math.PI * 2); ctx.fill();
     }
-    // lua em quarto crescente a nascer a leste... do lado oposto ao fogo
+    // lua em quarto crescente a nascer a leste, do lado oposto ao fogo
     const l = suave(0.6, 1, p);
     if (l > 0) {
       const lx = 1380 - l * 120, ly = 470 - l * 290;
       ctx.save();
-      ctx.beginPath();
-      ctx.rect(lx - 40, ly - 40, 80, 80);
-      ctx.arc(lx + 9, ly - 5, 20, 0, Math.PI * 2);
-      ctx.clip('evenodd');
+      ctx.globalCompositeOperation = 'lighter';
+      mancha(lx, ly, 70, hex('#C9CFE8'), 0.12 * l);
+      ctx.restore();
+      ctx.save();
+      ctx.beginPath(); ctx.rect(lx - 40, ly - 40, 80, 80); ctx.arc(lx + 9, ly - 5, 20, 0, Math.PI * 2); ctx.clip('evenodd');
       ctx.fillStyle = `rgba(240,236,214,${l})`;
       ctx.beginPath(); ctx.arc(lx, ly, 22, 0, Math.PI * 2); ctx.fill();
       ctx.restore();
     }
     // nuvens
-    ctx.fillStyle = rgb(corNuvem(p), lerp(0.75, 0.35, noite));
-    nuvensVisiveis.length = 0;
+    const cxFogo = (frente(fogo).esq + frente(fogo).dir) / 2;
     for (const n of nuvens) {
-      const x = ((n.x + t * n.v * (reduzir ? 0 : 1)) % (MW + 400)) - 200;
-      nuvem(x, n.y, n.s);
-      nuvensVisiveis.push({ x, y: n.y, s: n.s });
+      const x = ((n.x + t * n.v * (reduzir ? 0 : 1)) % (MW + 500)) - 250;
+      const tinta = fogo * 0.55 * Math.exp(-Math.abs(x - cxFogo) / 600);
+      desenharNuvem(n, x, p, tinta);
     }
-    tingirNuvens(fogo);
-    desenharPassaros(p, t);
     ctx.restore();
 
-    // serra, de trás para a frente, cada vez mais escura e nítida (perspetiva atmosférica)
     const horizonte = ceuBase(p);
-    const NEVOA = [0.42, 0.3, 0.17, 0.06, 0];
-    const rasante = corRasante(p), aRasante = Math.max(0, forcaRasante(p));
-    for (let i = 0; i < camadasDesenho.length; i++) {
-      ctx.save();
-      ctx.translate(0, dy[i]);
-      if (i === 0) fumoDistante(p, t);
-      const cor = mistura(camadas[i].cor(p), horizonte, NEVOA[i] * (1 - 0.6 * noite));
-      preencherCamada(i, p, t, cor);
-      if (i < 4 && aRasante > 0.01) {
-        ctx.strokeStyle = rgb(rasante, aRasante * (1 - i * 0.18));
-        ctx.lineWidth = 1.6;
-        ctx.stroke(camadasDesenho[i].linha);
-      }
-      if (i === 1) desenharFogo(fogo, ignicao, t);
-      if (i === 3) desenharTorre(p, t);
-      if (i < 3) nevoaVale(i, p, horizonte);
-      ctx.restore();
-      if (i === 1) {
-        ctx.save(); ctx.translate(0, dyCeu * 0.4); raios(p, t, sx, sy); ctx.restore();
-      }
-      if (i === 2) { ctx.save(); ctx.translate(0, dy[1]); desenharParticulas(noite); ctx.restore(); }
-    }
+    const nevoa = forcaNevoa(p);
 
-    // ar quente: uma camada âmbar ténue sobre o horizonte nas horas secas
-    const calor = calorDoDia(p);
+    // --- serra ao longe: clara e de pouco contraste ---
+    ctx.save();
+    ctx.translate(0, dyLonge);
+    ctx.fillStyle = rgb(mistura(corPlano[0](p), horizonte, 0.45 * (1 - 0.5 * noite)));
+    ctx.fill(pSerraLonge);
+    nevoaDoVale(560, 70, horizonte, nevoa * 0.7, sx, corSol, dia);
+    ctx.restore();
+
+    // --- cumeada com floresta: o fumo nasce atrás das copas ---
+    ctx.save();
+    ctx.translate(0, dyCumeada);
+    // a fogueira mal apagada: antes de o fogo pegar, só um brilho baixo entre as copas
+    const brasa = ignicao * (1 - suave(0.1, 0.5, fogo));
+    if (brasa > 0.01) {
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      const tremeluz = reduzir ? 1 : 0.8 + 0.2 * Math.sin(t * 0.02) * Math.sin(t * 0.013);
+      mancha(FOGO.x, cumeada(FOGO.x) - 4, 46, hex('#FF8A3A'), 0.5 * brasa * tremeluz, 0.7);
+      ctx.restore();
+    }
+    colunaDeFumo(p, t, Math.max(fumo, 0.3 * ignicao), noite, fogo, brasa);
+    chamasEntreCopas(t, fogo, noite);
+    const corCumeada = mistura(corPlano[1](p), horizonte, 0.2 * (1 - 0.5 * noite));
+    ctx.fillStyle = rgb(corCumeada);
+    ctx.fill(pCumeada);
+    ctx.fillStyle = rgb(mistura(corCumeada, [0, 0, 0], 0.1));
+    ctx.fill(pCumeadaVale);
+    luzDoFogoNoTerreno(t, fogo, noite);
+    nevoaDoVale(690, 90, horizonte, nevoa, sx, corSol, dia);
+    ctx.restore();
+
+    // ar quente das horas secas: uma camada âmbar muito ténue sobre o horizonte
+    const calor = suave(0.2, 0.4, p) * (1 - suave(0.5, 0.6, p));
     if (calor > 0.01) {
-      ctx.save();
-      const gq = ctx.createLinearGradient(0, 380, 0, 820);
-      gq.addColorStop(0, 'rgba(255,196,120,0)'); gq.addColorStop(0.5, `rgba(255,190,110,${0.14 * calor})`); gq.addColorStop(1, 'rgba(255,190,110,0)');
-      ctx.fillStyle = gq; ctx.fillRect(-200, 380, MW + 400, 440);
-      ctx.restore();
+      const gq = ctx.createLinearGradient(0, 420, 0, 760);
+      gq.addColorStop(0, 'rgba(255,196,120,0)'); gq.addColorStop(0.55, `rgba(255,190,110,${0.1 * calor})`); gq.addColorStop(1, 'rgba(255,190,110,0)');
+      ctx.fillStyle = gq; ctx.fillRect(-220, 420, MW + 440, 340);
     }
 
-    // o fogo tinge a serra mais próxima
+    // --- colina da torre ---
+    const corColina = corPlano[2](p);
+    // a colina recebe mais luz no topo e escurece para o vale
+    const gc = ctx.createLinearGradient(0, CHAO - 10, 0, 900);
+    gc.addColorStop(0, rgb(mistura(corColina, mistura(corSol, horizonte, 0.5), 0.16 * dia + 0.04)));
+    gc.addColorStop(0.45, rgb(corColina));
+    gc.addColorStop(1, rgb(mistura(corColina, [0, 0, 0], 0.22)));
+    ctx.fillStyle = gc;
+    ctx.fill(pColina);
+    for (const m of matos) mancha(m.x, colinaY(m.x) + m.dy, m.r, mistura(corColina, [0, 0, 0], 0.3), 0.22, 0.35);
+    const gt = ctx.createLinearGradient(0, CHAO, 0, 830);
+    gt.addColorStop(0, rgb(corTerra(p), 0.08)); gt.addColorStop(0.35, rgb(corTerra(p), 0.26)); gt.addColorStop(1, rgb(corTerra(p), 0.36));
+    ctx.fillStyle = gt;
+    ctx.fill(pCarreiro);
+    const lado = sx < MW / 2 ? -1 : 1;
+    const rimColina = { cor: mistura(corSol, [255, 255, 255], 0.2), a: 0.45 * dia, lado: sx < TORRE.x ? -1 : 1, vento };
+    for (const a of COLINA_ARVORES) arvore(a, a.x, colinaY(a.x) + 2, t, mistura(corColina, [0, 0, 0], 0.18), rimColina);
+    clareiraESombras(p, sx, sy, dia);
+    desenharTorre(p, t);
+    chaoDaTorre(p, t, mistura(corColina, [0, 0, 0], 0.08));
+
+    // --- primeiro plano: o mais escuro, com luz de contorno do lado do sol ---
+    ctx.save();
+    ctx.translate(0, dyFrente);
+    const corFrente = corPlano[3](p);
+    const solBaixo = 0.35 + 0.65 * Math.max(1 - suave(0.04, 0.2, p), suave(0.36, 0.48, p));
+    const rimFrente = { cor: mistura(corSol, [255, 255, 255], 0.1), a: 0.42 * dia * solBaixo, lado, vento };
+    for (const a of FRENTE) arvore(a, a.x, chaoFrente(a.x) + 6, t, corFrente, rimFrente);
+    ctx.fillStyle = rgb(corFrente);
+    ctx.fill(pChaoFrente);
+    ctx.restore();
+
+    // o fogo tinge o primeiro plano do lado do incêndio
     if (fogo > 0) {
       ctx.save();
-      ctx.translate(0, dy[1]);
       ctx.globalCompositeOperation = 'screen';
-      const yR = cumeadas[1](FOGO.x);
-      const g2 = ctx.createRadialGradient(FOGO.x, yR, 20, FOGO.x, yR, 700);
-      g2.addColorStop(0, rgb(hex('#C4461C'), 0.35 * fogo)); g2.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = g2; ctx.fillRect(FOGO.x - 800, yR - 700, 1600, 1400);
+      mancha(cxFogo, cumeada(cxFogo) + 120, 760, hex('#B4421C'), 0.26 * fogo, 0.7);
       ctx.restore();
     }
 
@@ -734,7 +883,6 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
     if (entrada > 0) {
       ctx.fillStyle = `rgba(46,33,25,${entrada})`;
       ctx.fillRect(0, 0, W, H);
-      // a luz do candeeiro, igual à do interior do posto, para não haver corte
       const gl = ctx.createRadialGradient(W / 2, 120, 10, W / 2, 120, Math.max(W, H) * 0.7);
       gl.addColorStop(0, `rgba(246,182,80,${0.16 * entrada})`); gl.addColorStop(1, 'rgba(246,182,80,0)');
       ctx.fillStyle = gl; ctx.fillRect(0, 0, W, H);

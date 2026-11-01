@@ -56,6 +56,8 @@
 @keyframes deixa { 50% { transform: translateY(4px); } }
 
 .diario { list-style: none; margin: 0; padding: 0; }
+/* o diário e os títulos ficam por cima do grão e da vinheta, para manterem o contraste a qualquer hora */
+.titulo, .diario li, .hud-intro { z-index: 2; }
 .diario li {
   position: absolute; left: var(--gutter); bottom: 11svh;
   width: min(30rem, calc(100% - 2 * var(--gutter)));
