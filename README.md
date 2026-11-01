@@ -80,7 +80,7 @@ Os conteúdos estão separados do código (`src/dados/`), para a narrativa do Bl
 ## Versões anteriores
 
 - O primeiro protótipo (dez anos a gerir a serra) está na tag `prototipo-dez-anos`.
-- A animação do incêndio na abertura foi melhorada num commit próprio ("Melhorar a animação da floresta a arder"). Para voltar à versão original basta reverter esse commit: `git revert 31ca048`.
+- A animação do incêndio na abertura foi melhorada num commit próprio ("Melhorar a animação da floresta a arder"). Para voltar à versão original basta reverter esse commit: `git revert 11ca36f`.
 
 ## Grupo
 
