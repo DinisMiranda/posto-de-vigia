@@ -108,12 +108,13 @@ a { color: var(--lampada); }
 .botao svg { transition: transform var(--dur-media) var(--ease-mola); }
 .botao:hover:not(:disabled) svg:last-child { transform: translateX(3px); }
 .botao.primario {
-  background: linear-gradient(180deg, #E4592B, var(--brasa) 55%, #C43F17);
+  /* brasa um pouco mais escura que a marca, para o texto claro passar AA (≥ 4.5:1) em todo o botão */
+  background: linear-gradient(180deg, #C4431A, #B93A14 55%, #A83318);
   color: #FFF6EC;
   box-shadow: inset 0 1px 0 rgba(255, 220, 190, .35), inset 0 -2px 0 rgba(0, 0, 0, .18), 0 6px 14px -6px rgba(217, 72, 28, .6);
   text-shadow: 0 1px 0 rgba(0, 0, 0, .2);
 }
-.botao.primario:hover:not(:disabled) { background: linear-gradient(180deg, #EC6534, #DE4E1F 55%, #B93A14); box-shadow: inset 0 1px 0 rgba(255, 220, 190, .4), inset 0 -2px 0 rgba(0, 0, 0, .18), 0 10px 20px -8px rgba(217, 72, 28, .75); }
+.botao.primario:hover:not(:disabled) { background: linear-gradient(180deg, #BF4019, #B03713 55%, #9E2F15); box-shadow: inset 0 1px 0 rgba(255, 220, 190, .4), inset 0 -2px 0 rgba(0, 0, 0, .18), 0 10px 20px -8px rgba(217, 72, 28, .75); }
 .botao.secundario { background: rgba(243, 234, 219, .03); color: var(--texto); border-color: var(--madeira-3); }
 .botao.secundario:hover:not(:disabled) { background: var(--madeira-3); border-color: #6E5440; }
 .botao.no-papel { color: var(--tinta); border-color: rgba(35, 50, 31, .45); background: rgba(255, 255, 255, .25); }
