@@ -127,6 +127,7 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
 
   const rE = aleatorio(7);
   const estrelas = Array.from({ length: 220 }, () => ({ x: rE() * MW, y: rE() * 560, r: 0.4 + rE() * 1.3, f: rE() * 6 }));
+  const nuvensVisiveis = [];
   const nuvens = [
     { x: 240, y: 170, s: 1.1, v: 0.012 }, { x: 820, y: 110, s: 0.8, v: 0.008 }, { x: 1320, y: 210, s: 1.3, v: 0.01 },
   ];
@@ -155,29 +156,49 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
     return { s, fx: JANELA.x - (JANELA.x - cx) * resto, fy: JANELA.y - (JANELA.y - cy) * resto, z };
   }
 
-  // ---------- fumo e brasas ----------
+  // ---------- fogo: ignição, frente que avança com o vento e rasto ardido ----------
+  // O fogo nasce numa fogueira mal apagada no parque de merendas e espalha-se sobretudo
+  // para leste, para onde sopra o vento ("vento a rodar para leste", diz o diário).
+  const frente = f => ({ esq: FOGO.x - (6 + f * 70), dir: FOGO.x + (6 + f * 230) });
+  const rB = aleatorio(91);
+  const brasasChao = Array.from({ length: 160 }, () => ({ u: rB(), dy: rB() * 5, f: rB() * 6 }));
   const particulas = [];
-  function atualizarFogo(intensidade, dt, t) {
-    if (intensidade > 0.02 && !reduzir) {
-      const n = intensidade * 2.4 * dt;
-      for (let i = 0; i < n || Math.random() < n - i; i++) {
-        const largura = 20 + intensidade * 190;
+  function atualizarFogo(intensidade, ignicao, dt, t) {
+    if (!reduzir) {
+      // antes de pegar: só um fio de fumo a sair da fogueira
+      if (ignicao > 0.05 && intensidade < 0.05 && Math.random() < 0.3 * dt) {
         particulas.push({
-          x: FOGO.x + (Math.random() - 0.5) * largura, y: cumeadas[1](FOGO.x) - 4,
-          vx: 0.1 + Math.random() * 0.22, vy: -(0.7 + Math.random() * 0.6),
-          r: 4 + Math.random() * 5, v: 0, tipo: Math.random() < 0.18 ? 'brasa' : 'fumo',
+          x: FOGO.x + (Math.random() - 0.5) * 4, y: cumeadas[1](FOGO.x) - 3,
+          vx: 0.04, vy: -(0.3 + Math.random() * 0.2), r: 1.4, v: 0, tipo: 'fumo', fino: true,
         });
+      }
+      if (intensidade > 0.02) {
+        const { esq, dir } = frente(intensidade);
+        const n = intensidade * 3 * dt;
+        for (let i = 0; i < n || Math.random() < n - i; i++) {
+          // a maior parte do fumo nasce nas frentes, onde arde com mais força
+          const naFrente = Math.random() < 0.7;
+          const x = naFrente ? (Math.random() < 0.75 ? dir : esq) + (Math.random() - 0.5) * 30 : lerp(esq, dir, Math.random());
+          particulas.push({
+            x, y: cumeadas[1](x) - 4,
+            vx: 0.08 + Math.random() * 0.2, vy: -(0.7 + Math.random() * 0.7),
+            r: 4 + Math.random() * 6, v: 0, tipo: Math.random() < 0.2 ? 'brasa' : 'fumo',
+          });
+        }
       }
     }
     for (let i = particulas.length - 1; i >= 0; i--) {
       const q = particulas[i];
-      q.v += dt / (q.tipo === 'brasa' ? 110 : 420);
-      q.x += (q.vx + q.v * q.v * 1.6) * dt; q.y += q.vy * dt * (q.tipo === 'brasa' ? 1.6 : 1);
-      q.r += (q.tipo === 'brasa' ? 0 : 0.14) * dt;
-      if (q.tipo === 'brasa') q.x += Math.sin(t * 0.01 + i) * 0.3;
+      q.v += dt / (q.tipo === 'brasa' ? 120 : q.fino ? 260 : 480);
+      // o vento é mais forte lá em cima: a coluna de fumo dobra para leste
+      const vento = q.v * q.v * 2.2;
+      q.x += (q.vx + vento) * dt;
+      q.y += q.vy * dt * (q.tipo === 'brasa' ? 1.5 : 1) * (1 - q.v * 0.35);
+      q.r += (q.tipo === 'brasa' ? 0 : q.fino ? 0.04 : 0.16) * dt;
+      if (q.tipo === 'brasa') q.x += Math.sin(t * 0.01 + i) * 0.35;
       if (q.v >= 1) particulas.splice(i, 1);
     }
-    if (particulas.length > 520) particulas.splice(0, particulas.length - 520);
+    if (particulas.length > 700) particulas.splice(0, particulas.length - 700);
   }
 
   // ---------- desenho ----------
@@ -289,32 +310,92 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
     }
   }
 
-  function desenharFogo(intensidade, t) {
-    if (intensidade <= 0) return;
+  function desenharFogo(intensidade, ignicao, t) {
     const yR = cumeadas[1](FOGO.x);
-    const largura = 20 + intensidade * 190;
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    // clarão no céu
-    const g = ctx.createRadialGradient(FOGO.x, yR, 5, FOGO.x, yR, 380 * (0.5 + intensidade));
+    // a fogueira: uma brasa a piscar no parque de merendas, antes de o fogo pegar
+    if (ignicao > 0 && intensidade < 0.6) {
+      const a = ignicao * (1 - suave(0.2, 0.6, intensidade)) * (reduzir ? 1 : 0.7 + 0.3 * Math.sin(t * 0.02));
+      const g0 = ctx.createRadialGradient(FOGO.x, yR - 2, 0, FOGO.x, yR - 2, 26);
+      g0.addColorStop(0, rgb(hex('#FFD07A'), 0.9 * a));
+      g0.addColorStop(0.3, rgb(hex('#FF7A2A'), 0.5 * a));
+      g0.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g0;
+      ctx.fillRect(FOGO.x - 30, yR - 30, 60, 60);
+    }
+    if (intensidade <= 0) { ctx.restore(); return; }
+    const { esq, dir } = frente(intensidade);
+    const centro = (esq + dir) / 2;
+
+    // rasto ardido: atrás da frente a encosta fica negra, com brasas a piscar
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.beginPath();
+    ctx.moveTo(esq, cumeadas[1](esq));
+    for (let x = esq; x <= dir; x += 6) ctx.lineTo(x, cumeadas[1](x) - 1);
+    for (let x = dir; x >= esq; x -= 6) ctx.lineTo(x, cumeadas[1](x) + 11 + 4 * Math.sin(x * 0.07));
+    ctx.closePath();
+    ctx.fillStyle = `rgba(20,12,10,${0.85 * Math.min(1, intensidade * 4)})`;
+    ctx.fill();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const b of brasasChao) {
+      const x = lerp(esq, dir, b.u);
+      const brilho = reduzir ? 0.6 : 0.4 + 0.6 * Math.max(0, Math.sin(t * 0.006 + b.f * 7));
+      ctx.fillStyle = `rgba(255,${110 + 60 * brilho | 0},40,${0.55 * brilho * intensidade})`;
+      ctx.fillRect(x, cumeadas[1](x) + 1 + b.dy, 1.6, 1.6);
+    }
+
+    // clarão no céu, a acompanhar a frente
+    const g = ctx.createRadialGradient(centro, yR, 5, centro, yR, 420 * (0.5 + intensidade));
     g.addColorStop(0, rgb(hex('#FF8A3A'), 0.55 * intensidade));
     g.addColorStop(0.35, rgb(hex('#D9481C'), 0.22 * intensidade));
     g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = g;
-    ctx.fillRect(FOGO.x - 700, yR - 600, 1400, 900);
-    // línguas de fogo
-    const n = 46;
-    for (let i = 0; i < n; i++) {
-      const u = i / (n - 1) - 0.5;
-      const xx = FOGO.x + u * largura;
-      const y0 = cumeadas[1](xx) + 3;
-      const onda = reduzir ? 0.7 : 0.55 + 0.45 * Math.sin(t * 0.017 + i * 1.7) * Math.sin(t * 0.009 + i * 0.6);
-      const h = (6 + 18 * onda) * intensidade * (1 - (2 * u) ** 4);
-      const w = 3 + 3 * intensidade;
-      const gg = ctx.createLinearGradient(0, y0, 0, y0 - h);
-      gg.addColorStop(0, 'rgba(255,90,30,0.95)'); gg.addColorStop(0.55, 'rgba(255,170,60,0.8)'); gg.addColorStop(1, 'rgba(255,230,150,0)');
-      ctx.fillStyle = gg;
-      ctx.beginPath(); ctx.moveTo(xx - w, y0); ctx.quadraticCurveTo(xx - w * 0.4, y0 - h * 0.6, xx + Math.sin(t * 0.02 + i) * 2, y0 - h); ctx.quadraticCurveTo(xx + w * 0.4, y0 - h * 0.6, xx + w, y0); ctx.fill();
+    ctx.fillRect(centro - 800, yR - 650, 1600, 1000);
+
+    // línguas de fogo em duas camadas: altas nas frentes, baixas no interior que já ardeu,
+    // todas inclinadas pelo vento
+    const n = 72;
+    for (let camada = 0; camada < 2; camada++) {
+      for (let i = 0; i < n; i++) {
+        const xx = lerp(esq, dir, i / (n - 1));
+        const y0 = cumeadas[1](xx) + 3;
+        const forca = Math.min(1, Math.exp(-(dir - xx) / 24) + 0.6 * Math.exp(-(xx - esq) / 18) + 0.16);
+        const onda = reduzir ? 0.7 : 0.55 + 0.45 * Math.sin(t * 0.017 + i * 1.7 + camada) * Math.sin(t * 0.011 + i * 0.6);
+        const h = (camada ? 0.55 : 1) * (10 + 34 * onda) * forca * (0.4 + 0.6 * intensidade);
+        if (h < 1.5) continue;
+        const w = (camada ? 2 : 3.4) + 2 * intensidade;
+        const inclina = h * 0.28 + Math.sin(t * 0.02 + i) * 2;
+        const gg = ctx.createLinearGradient(0, y0, 0, y0 - h);
+        if (camada === 0) {
+          gg.addColorStop(0, 'rgba(255,80,25,0.95)'); gg.addColorStop(0.55, 'rgba(255,150,50,0.8)'); gg.addColorStop(1, 'rgba(255,210,120,0)');
+        } else {
+          gg.addColorStop(0, 'rgba(255,230,140,0.9)'); gg.addColorStop(1, 'rgba(255,250,210,0)');
+        }
+        ctx.fillStyle = gg;
+        ctx.beginPath();
+        ctx.moveTo(xx - w, y0);
+        ctx.quadraticCurveTo(xx - w * 0.4 + inclina * 0.3, y0 - h * 0.6, xx + inclina, y0 - h);
+        ctx.quadraticCurveTo(xx + w * 0.4 + inclina * 0.4, y0 - h * 0.6, xx + w, y0);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
+  // as nuvens perto do fogo ficam tingidas pelo clarão
+  function tingirNuvens(intensidade) {
+    if (intensidade <= 0) return;
+    const { esq, dir } = frente(intensidade);
+    const centro = (esq + dir) / 2;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const n of nuvensVisiveis) {
+      const d = Math.hypot(n.x - centro, n.y - cumeadas[1](centro));
+      const a = 0.45 * intensidade * Math.exp(-d / 650);
+      if (a < 0.01) continue;
+      ctx.fillStyle = `rgba(230,100,40,${a})`;
+      nuvem(n.x, n.y, n.s);
     }
     ctx.restore();
   }
@@ -329,7 +410,7 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
         const quente = clamp(1 - q.v * 3.2, 0, 1);
         const base = mistura(hex('#7C7880'), hex('#3B3845'), noite);
         const c = mistura(base, hex('#E07A3C'), quente * 0.7 * noite + quente * 0.2);
-        ctx.fillStyle = rgb(c, 0.22 * vida * Math.min(1, q.v * 12));
+        ctx.fillStyle = rgb(c, (q.fino ? 0.35 : 0.22) * vida * Math.min(1, q.v * 12));
         ctx.beginPath(); ctx.arc(q.x, q.y, q.r, 0, Math.PI * 2); ctx.fill();
       }
     }
@@ -346,8 +427,9 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
   function desenhar(p, t, dt) {
     const cam = camara(p);
     const noite = suave(0.55, 0.72, p);
+    const ignicao = suave(0.57, 0.63, p);
     const fogo = suave(0.63, 0.78, p);
-    atualizarFogo(fogo, dt, t);
+    atualizarFogo(fogo, ignicao, dt, t);
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     // céu, preso ao ecrã para não perder o gradiente com o zoom
@@ -391,16 +473,19 @@ export function iniciarCena({ canvas, historia, relogio, humidade, titulo, hud, 
     }
     // nuvens
     ctx.fillStyle = rgb(corNuvem(p), lerp(0.75, 0.35, noite));
+    nuvensVisiveis.length = 0;
     for (const n of nuvens) {
       const x = ((n.x + t * n.v * (reduzir ? 0 : 1)) % (MW + 400)) - 200;
       nuvem(x, n.y, n.s);
+      nuvensVisiveis.push({ x, y: n.y, s: n.s });
     }
+    tingirNuvens(fogo);
 
     // serra, de trás para a frente
     for (let i = 0; i < caminhos.length; i++) {
       ctx.fillStyle = rgb(camadas[i].cor(p));
       ctx.fill(caminhos[i]);
-      if (i === 1) desenharFogo(fogo, t);
+      if (i === 1) desenharFogo(fogo, ignicao, t);
       if (i === 2) desenharParticulas(noite);
       if (i === 3) desenharTorre(p, t);
     }
