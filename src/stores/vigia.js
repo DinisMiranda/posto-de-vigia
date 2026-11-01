@@ -25,6 +25,7 @@ function estadoInicial() {
     quizInicial: null,
     desafioFinal: null,
     consultasObservatorio: {},
+    cartao: { partilhado: 0, guardado: 0, impresso: 0 },
     encosta: encostaLogica.novaEncosta(),
   };
 }
@@ -47,6 +48,8 @@ export const useVigiaStore = defineStore('vigia', () => {
   const desafioFinal = ref(base.desafioFinal);
   const consultasObservatorio = ref(base.consultasObservatorio);
   const encosta = ref(base.encosta);
+  /** Quantas vezes o cartão "O que fazer" foi partilhado, guardado ou impresso (KPI do objetivo 2). */
+  const cartao = ref(base.cartao);
   /** Fila de novidades a mostrar (subida de nível, insígnia). Não é guardada. */
   const novidades = ref([]);
 
@@ -162,6 +165,10 @@ export const useVigiaStore = defineStore('vigia', () => {
     adicionarPontos((desafioFinal.value - antes) * 10);
   }
 
+  function registarCartao(acao) {
+    cartao.value[acao] = (cartao.value[acao] || 0) + 1;
+  }
+
   // ----- desafio da encosta -----
   function gastar(parcelaId, acao) {
     const e = encosta.value;
@@ -183,6 +190,7 @@ export const useVigiaStore = defineStore('vigia', () => {
     quizInicial.value = null;
     desafioFinal.value = null;
     consultasObservatorio.value = {};
+    cartao.value = novo.cartao;
     encosta.value = novo.encosta;
     novidades.value = [];
   }
@@ -191,14 +199,14 @@ export const useVigiaStore = defineStore('vigia', () => {
 
   // guarda o progresso no navegador
   watch(
-    [zonas, pontosVigilancia, nivel, desafiosConcluidos, resultados, insignias, quizInicial, desafioFinal, consultasObservatorio, encosta],
+    [zonas, pontosVigilancia, nivel, desafiosConcluidos, resultados, insignias, quizInicial, desafioFinal, consultasObservatorio, cartao, encosta],
     () => {
       try {
         localStorage.setItem(CHAVE, JSON.stringify({
           zonas: zonas.value, pontosVigilancia: pontosVigilancia.value, nivel: nivel.value,
           desafiosConcluidos: desafiosConcluidos.value, resultados: resultados.value, insignias: insignias.value,
           quizInicial: quizInicial.value, desafioFinal: desafioFinal.value,
-          consultasObservatorio: consultasObservatorio.value, encosta: encosta.value,
+          consultasObservatorio: consultasObservatorio.value, cartao: cartao.value, encosta: encosta.value,
         }));
       } catch { /* modo privado ou armazenamento cheio: o jogo continua sem guardar */ }
     },
@@ -207,10 +215,10 @@ export const useVigiaStore = defineStore('vigia', () => {
 
   return {
     zonas, pontosVigilancia, nivel, desafiosConcluidos, resultados, insignias, quizInicial, desafioFinal,
-    consultasObservatorio, encosta, novidades,
+    consultasObservatorio, cartao, encosta, novidades,
     estados, nivelAtual, proximoNivel, sugestao, zonasConcluidas, eGuardiao, riscoPorZona, perigoDoDia, encostaMetricas,
     atualizarZonas, abrirZona, concluirZona, adicionarPontos, atualizarNivel, concluirDesafio, desbloquearInsignia,
-    carregarObservatorio, abrirObservatorio, registarQuizInicial, registarDesafioFinal,
+    carregarObservatorio, abrirObservatorio, registarQuizInicial, registarDesafioFinal, registarCartao,
     gastar, recalcularMetricas, avancarEstacao, simularVerao, reiniciarEncosta, reiniciar,
   };
 });

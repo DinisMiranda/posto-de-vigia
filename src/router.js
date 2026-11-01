@@ -2,7 +2,6 @@ import { createRouter, createWebHashHistory } from 'vue-router';
 import { useVigiaStore } from './stores/vigia.js';
 import { DESAFIOS } from './logica/regras.js';
 import VistaMapa from './views/VistaMapa.vue';
-import EmBreve from './views/VistaEmBreve.vue';
 
 const routes = [
   { path: '/', name: 'mapa', component: VistaMapa },
@@ -11,7 +10,7 @@ const routes = [
   { path: '/zona/:id/:desafio', name: 'desafio', component: () => import('./views/VistaDesafio.vue'), props: true },
   { path: '/observatorio/:id?', name: 'observatorio', component: () => import('./views/VistaObservatorio.vue'), props: true },
   { path: '/desafio-final', name: 'desafio-final', component: () => import('./views/VistaQuiz.vue'), props: { tipo: 'final' } },
-  { path: '/cartao', name: 'cartao', component: EmBreve },
+  { path: '/cartao', name: 'cartao', component: () => import('./views/VistaCartao.vue') },
   { path: '/:caminho(.*)*', redirect: '/' },
 ];
 
