@@ -5,6 +5,12 @@ defineProps({ id: { type: String, required: true }, ganha: { type: Boolean, defa
 
 <template>
   <svg viewBox="0 0 120 120" class="insignia-arte" :class="{ apagada: !ganha }" aria-hidden="true">
+    <defs>
+      <!-- trama do tecido bordado -->
+      <pattern id="trama-bordado" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <rect width="4" height="4" fill="transparent" /><line x1="0" y1="0" x2="0" y2="4" stroke="#fff" stroke-width="1" opacity=".09" />
+      </pattern>
+    </defs>
     <template v-if="id === 'guardiao-floresta'">
       <circle cx="60" cy="60" r="56" fill="#2F6B3A" />
       <circle cx="60" cy="60" r="48" fill="none" stroke="#B7D7A8" stroke-width="2" stroke-dasharray="3 4" />
@@ -28,6 +34,10 @@ defineProps({ id: { type: String, required: true }, ganha: { type: Boolean, defa
       <path d="M53 66 H67 M51 80 H69" stroke="#1F4E78" stroke-width="2.5" />
       <path d="M78 46 C86 50 90 56 90 62 M82 40 C94 46 99 54 99 63" fill="none" stroke="#DCE8F5" stroke-width="3" stroke-linecap="round" />
     </template>
+    <!-- orla em ponto cheio e textura de tecido, comuns aos três emblemas -->
+    <circle cx="60" cy="60" r="56" fill="url(#trama-bordado)" />
+    <circle cx="60" cy="60" r="55" fill="none" stroke="#F3EADB" stroke-opacity=".55" stroke-width="4" stroke-dasharray="1.1 1.4" />
+    <circle cx="60" cy="60" r="57.5" fill="none" stroke="#000" stroke-opacity=".35" stroke-width="1" />
   </svg>
 </template>
 
